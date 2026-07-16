@@ -65,16 +65,49 @@ Também dá para sobrescrever qualquer dimensão individual
 ### Treinar no seu próprio material (PDFs)
 
 O corpus incluído foi gerado a partir de PDFs sobre lógica de programação,
-Python e modelos de linguagem. Para montar o seu:
+Python, modelos de linguagem e *A Arte da Guerra*. Para montar o seu:
 
 ```bash
 pip install pymupdf
 python tools/build_corpus.py livro1.pdf livro2.pdf -o data/corpus.txt
-python train.py --preset medium --steps 1500
+python train.py --preset medium --steps 2000
 ```
 
 O script extrai o texto, remove cabeçalhos/rodapés repetidos, junta
 palavras hifenizadas e normaliza o espaçamento.
+
+## Resultados
+
+Treinando o preset `medium` (~1,8 mi de parâmetros) por 2000 passos no
+corpus de ~231 mil caracteres (4 livros), a EVA sai de texto aleatório
+para português reconhecível:
+
+```
+passo    1/2000 | treino 5.20 | val 4.88
+passo 1000/2000 | treino 1.54 | val 1.77
+passo 2000/2000 | treino 0.84 | val 1.57
+```
+
+Amostra gerada (prompt "Um algoritmo é"):
+
+> Um algoritmo é destador o custo de treinamento de múltiplos modelos com
+> um mecanismo de aprovem recebença do inimigo. Esses cinco pode ser camada
+> capacidade das comunstraras e trabalhadas para medidade, modelos com os
+> de seguir desempenho do uso de treinamento profundo.
+
+O modelo aprendeu vocabulário e gramática local do português e mistura os
+temas dos quatro livros (guerra, algoritmos, modelos de linguagem). Não é
+um texto perfeito — é um modelo minúsculo em CPU — mas demonstra que toda
+a mecânica (autograd, atenção, otimização) funciona de ponta a ponta.
+
+### O que fez a diferença
+
+O primeiro treino estagnava em loss ~2,5 gerando texto incoerente. Três
+ajustes destravaram o aprendizado:
+
+- **GELU** no lugar de `tanh` no MLP (a `tanh` saturava e matava o gradiente)
+- **Agendamento de learning rate** (warmup + decaimento cosseno)
+- **Init estilo GPT-2** nas projeções residuais (escala `1/sqrt(2*n_layer)`)
 
 ## Como a EVA funciona (visão geral)
 
