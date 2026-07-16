@@ -21,7 +21,9 @@ eva/
   model.py            o modelo GPT completo + geração de texto
   optim.py            otimizador AdamW e clip de gradiente
   tokenizer.py        tokenizador em nível de caractere
-app.py                painel web para alimentar/treinar/gerar sem código
+app.py                painel web (http.server) para uso local / Render / Docker
+gradio_ui.py          mesma interface em Gradio (para o Hugging Face grátis)
+hf_space/             arquivos prontos para colar num Space Gradio
 train.py              script de treino e amostragem (com presets)
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
@@ -88,34 +90,28 @@ No plano grátis o serviço "hiberna" após alguns minutos parado e leva
 Como o disco é temporário, materiais e checkpoints valem para a sessão
 atual (para guardar de vez, use "Baixar cérebro" — veja abaixo).
 
-## Publicar no Hugging Face Spaces (Docker)
+## Publicar no Hugging Face Spaces (Gradio — grátis)
 
-O projeto traz um `Dockerfile`, então roda em qualquer nuvem com Docker. O
-**Hugging Face Spaces** é o mais indicado para IA: link fixo, grátis e
-sempre disponível (acorda sozinho ao ser acessado).
+No Hugging Face, o SDK Docker exige hardware pago; o **SDK Gradio** roda no
+tier gratuito. O projeto traz uma interface Gradio (`gradio_ui.py`) e uma
+pasta `hf_space/` com tudo pronto para colar num Space — link fixo, grátis
+e sempre disponível (acorda sozinho ao ser acessado).
 
 1. Conta grátis em **https://huggingface.co**.
-2. **New → Space**, escolha **SDK: Docker → Blank**.
-3. No Space, crie dois arquivos (pelo próprio navegador do iPad):
-   - `README.md` com o cabeçalho:
-     ```
-     ---
-     title: EVA
-     sdk: docker
-     app_port: 7860
-     ---
-     ```
-   - `Dockerfile` com uma linha que clona este repositório e reusa tudo:
-     ```dockerfile
-     FROM python:3.11-slim
-     RUN pip install --no-cache-dir numpy pymupdf
-     RUN git clone -b claude/custom-ai-from-scratch-dx8d5p \
-         https://github.com/ciceromayk/EVA.git /app
-     WORKDIR /app
-     ENV PORT=7860
-     CMD ["python", "app.py"]
-     ```
+2. **New → Space**, escolha **SDK: Gradio → Blank**.
+3. No Space, crie três arquivos (copiando o conteúdo da pasta `hf_space/`
+   deste repositório, pelo próprio navegador do iPad):
+   - `README.md` — cabeçalho do Space (título, `sdk: gradio`, `app_file`)
+   - `requirements.txt` — `gradio`, `numpy`, `pymupdf`
+   - `app.py` — baixa o código da EVA do GitHub e sobe a interface
 4. O Space monta e publica sozinho. A URL fixa abre em qualquer aparelho.
+
+> O `app.py` do Space baixa este repositório automaticamente (via tarball,
+> sem depender de git), então você não precisa copiar o projeto todo — só
+> os três arquivos da pasta `hf_space/`.
+
+O `Dockerfile` na raiz continua disponível para hosts com Docker (Render,
+Fly, etc.), mas para o Hugging Face grátis use o caminho Gradio acima.
 
 ## Salvar seu progresso (qualquer dispositivo)
 
