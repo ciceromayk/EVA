@@ -12,7 +12,7 @@ import math
 
 import numpy as np
 
-from .autograd import Tensor, embedding, softmax
+from .autograd import Tensor, dropout, embedding, softmax
 
 
 class Module:
@@ -134,15 +134,20 @@ class MLP(Module):
 
 
 class Block(Module):
-    """Bloco Transformer: atenção e MLP, cada um com conexão residual."""
+    """Bloco Transformer: atenção e MLP, cada um com conexão residual.
 
-    def __init__(self, dim: int, n_heads: int):
+    Aplica dropout na saída de cada sub-camada (dropout residual), a forma
+    de regularização usada no GPT para reduzir overfitting.
+    """
+
+    def __init__(self, dim: int, n_heads: int, dropout: float = 0.0):
+        self.dropout = dropout
         self.ln1 = LayerNorm(dim)
         self.attn = CausalSelfAttention(dim, n_heads)
         self.ln2 = LayerNorm(dim)
         self.mlp = MLP(dim)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = x + self.attn(self.ln1(x))
-        x = x + self.mlp(self.ln2(x))
+        x = x + dropout(self.attn(self.ln1(x)), self.dropout)
+        x = x + dropout(self.mlp(self.ln2(x)), self.dropout)
         return x

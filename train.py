@@ -105,13 +105,16 @@ def train(args) -> None:
           f"({args.tokenizer}, vocabulário {tokenizer.vocab_size})")
 
     config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
-                       n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd)
+                       n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd,
+                       dropout=args.dropout)
     model = GPT(config)
-    print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros\n")
+    print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros "
+          f"| dropout {args.dropout}\n")
 
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     rng = np.random.default_rng(args.seed)
     warmup = max(1, int(args.steps * 0.05))
+    best_val = float("inf")
     start = time.time()
 
     for step in range(1, args.steps + 1):
@@ -130,12 +133,20 @@ def train(args) -> None:
         if step % args.log_every == 0 or step == 1:
             vloss = estimate_val_loss(model, val_data, config, args.batch_size, rng)
             elapsed = time.time() - start
+            # Early stopping: guarda o checkpoint de MENOR val loss, não o
+            # último — assim o overfitting no fim não estraga o resultado.
+            best = ""
+            if vloss < best_val:
+                best_val = vloss
+                save_checkpoint(model, tokenizer)
+                best = "  <- melhor (salvo)"
             print(f"passo {step:5d}/{args.steps} | treino {float(loss.data):.4f} "
-                  f"| val {vloss:.4f} | {elapsed:6.1f}s")
+                  f"| val {vloss:.4f} | {elapsed:6.1f}s{best}")
 
-    save_checkpoint(model, tokenizer)
-    print(f"\nCheckpoint salvo em {CKPT_PATH}\n")
-    sample(model, tokenizer, prompt="A ", max_new_tokens=300, rng=rng)
+    print(f"\nMelhor val loss: {best_val:.4f} | checkpoint em {CKPT_PATH}\n")
+    # amostra usando o melhor modelo salvo (não o último, possivelmente overfit)
+    best_model, tokenizer = load_checkpoint()
+    sample(best_model, tokenizer, prompt="A ", max_new_tokens=300, rng=rng)
 
 
 def estimate_val_loss(model, val_data, config, batch_size, rng, iters=5):
@@ -170,6 +181,8 @@ def main():
                         help="char (1 token/letra) ou bpe (subpalavras)")
     parser.add_argument("--bpe-vocab", type=int, default=512,
                         help="tamanho do vocabulário BPE (>= 256)")
+    parser.add_argument("--dropout", type=float, default=0.1,
+                        help="taxa de dropout (regularização; 0 desliga)")
     parser.add_argument("--steps", type=int, default=1500)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--block-size", type=int, default=None)

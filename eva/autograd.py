@@ -362,6 +362,26 @@ def cross_entropy(logits: Tensor, targets: np.ndarray) -> Tensor:
     return Tensor._result(loss, (logits,), backward)
 
 
+def dropout(x: Tensor, p: float) -> Tensor:
+    """Dropout invertido: zera uma fração `p` das ativações no treino.
+
+    Só age quando o grafo de gradientes está ativo (treino). Durante geração
+    e validação — que rodam sob `no_grad()` — retorna a entrada intacta, que
+    é exatamente o comportamento esperado em modo de avaliação.
+    """
+    if not _grad_enabled or p <= 0.0:
+        return x
+    keep = 1.0 - p
+    mask = (np.random.random(x.data.shape) >= p).astype(np.float32) / keep
+    data = x.data * mask
+
+    def backward(grad):
+        if x.requires_grad:
+            x._accumulate(grad * mask)
+
+    return Tensor._result(data, (x,), backward)
+
+
 def softmax(x: Tensor, axis: int = -1) -> Tensor:
     """Softmax numericamente estável construído com as primitivas do grafo."""
     # Subtrair o máximo (constante, sem gradiente) só melhora a estabilidade

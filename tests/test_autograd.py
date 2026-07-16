@@ -6,7 +6,7 @@ numérica, temos alta confiança de que o backpropagation está correto.
 
 import numpy as np
 
-from eva.autograd import Tensor, cross_entropy, softmax
+from eva.autograd import Tensor, cross_entropy, dropout, no_grad, softmax
 
 
 def numerical_grad(fn, x, eps=1e-4):
@@ -54,6 +54,18 @@ def test_softmax_rows_sum_to_one():
     assert np.allclose(p.data.sum(axis=-1), 1.0, atol=1e-5)
 
 
+def test_dropout_off_em_no_grad():
+    x = Tensor(np.ones((100, 100)), requires_grad=True)
+    # sob no_grad (validação/geração), dropout é identidade
+    with no_grad():
+        assert np.array_equal(dropout(x, 0.5).data, x.data)
+    # no treino, zera ~metade e escala o resto por 1/(1-p)
+    out = dropout(x, 0.5)
+    zeros = (out.data == 0).mean()
+    assert 0.4 < zeros < 0.6
+    assert np.allclose(out.data[out.data != 0], 2.0)
+
+
 def test_cross_entropy_matches_manual():
     rng = np.random.default_rng(3)
     logits = Tensor(rng.standard_normal((6, 4)), requires_grad=True)
@@ -73,5 +85,6 @@ if __name__ == "__main__":
     test_elementwise()
     test_matmul_and_reduce()
     test_softmax_rows_sum_to_one()
+    test_dropout_off_em_no_grad()
     test_cross_entropy_matches_manual()
     print("Todos os testes de autograd passaram.")

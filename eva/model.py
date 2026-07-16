@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .autograd import Tensor, cross_entropy, no_grad
+from .autograd import Tensor, cross_entropy, dropout, no_grad
 from .nn import Block, Embedding, LayerNorm, Linear, Module
 
 
@@ -26,6 +26,7 @@ class GPTConfig:
     n_layer: int = 3          # número de blocos Transformer
     n_head: int = 4           # cabeças de atenção por bloco
     n_embd: int = 96          # dimensão dos embeddings
+    dropout: float = 0.0      # regularização (0 = desligado)
 
 
 class GPT(Module):
@@ -35,7 +36,8 @@ class GPT(Module):
         self.config = config
         self.token_emb = Embedding(config.vocab_size, config.n_embd)
         self.pos_emb = Embedding(config.block_size, config.n_embd)
-        self.blocks = [Block(config.n_embd, config.n_head) for _ in range(config.n_layer)]
+        self.blocks = [Block(config.n_embd, config.n_head, config.dropout)
+                       for _ in range(config.n_layer)]
         self.ln_f = LayerNorm(config.n_embd)
         self.head = Linear(config.n_embd, config.vocab_size, bias=False)
 
@@ -55,6 +57,7 @@ class GPT(Module):
 
         positions = np.arange(T)
         x = self.token_emb(idx) + self.pos_emb(positions)  # (B, T, C) via broadcast
+        x = dropout(x, self.config.dropout)
         for block in self.blocks:
             x = block(x)
         x = self.ln_f(x)
