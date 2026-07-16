@@ -72,11 +72,15 @@ PYTHONPATH=. python tests/test_autograd.py
 Escolha o tamanho com `--preset`. Modelos maiores aprendem padrões mais
 ricos, mas exigem mais tempo de CPU:
 
-| preset   | parâmetros | camadas | contexto | tempo aprox. (1500 passos) |
-|----------|-----------:|:-------:|:--------:|:--------------------------:|
-| `small`  |    ~350 mil |    3    |    64    |  ~9 min                    |
-| `medium` |    ~1,8 mi  |    4    |    96    |  ~19 min (padrão)          |
-| `large`  |    ~4,8 mi  |    6    |   128    |  ~40 min                   |
+| preset   | parâmetros | camadas | contexto | velocidade relativa |
+|----------|-----------:|:-------:|:--------:|:-------------------:|
+| `nano`   |    ~100 mil |    2    |    48    |  relâmpago          |
+| `small`  |    ~350 mil |    3    |    64    |  ~4x mais rápido    |
+| `medium` |    ~1,8 mi  |    4    |    96    |  base               |
+| `large`  |    ~4,8 mi  |    6    |   128    |  ~4x mais lento     |
+
+Para experimentar rápido, use `nano` ou `small`. O painel web já vem com
+`small` selecionado por padrão.
 
 ```bash
 python train.py --preset large --steps 2000

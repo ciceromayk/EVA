@@ -27,6 +27,7 @@ CKPT_PATH = "eva_checkpoint.pkl"
 # Presets de arquitetura. "medium" e "large" são os "modelos maiores":
 # aprendem estruturas mais ricas do corpus, ao custo de mais tempo de CPU.
 PRESETS = {
+    "nano":   dict(n_layer=2, n_head=2, n_embd=64,  block_size=48,  batch_size=16),
     "small":  dict(n_layer=3, n_head=4, n_embd=96,  block_size=64,  batch_size=16),
     "medium": dict(n_layer=4, n_head=6, n_embd=192, block_size=96,  batch_size=16),
     "large":  dict(n_layer=6, n_head=8, n_embd=256, block_size=128, batch_size=12),

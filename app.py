@@ -241,54 +241,131 @@ class Handler(BaseHTTPRequestHandler):
 PAGE = r"""<!doctype html>
 <html lang="pt-br"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EVA — Painel de Estudo</title>
+<title>EVA · Núcleo Neural</title>
 <style>
-:root { color-scheme: light dark; }
-* { box-sizing: border-box; }
-body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-       background: #0f1216; color: #e7ecf2; line-height: 1.5; }
-header { padding: 22px 28px; border-bottom: 1px solid #232a33;
-         background: linear-gradient(90deg,#161b22,#0f1216); }
-h1 { margin: 0; font-size: 20px; letter-spacing: .5px; }
-h1 small { color: #8aa0b4; font-weight: 400; font-size: 13px; }
-main { max-width: 940px; margin: 0 auto; padding: 24px; display: grid; gap: 20px; }
-.card { background: #161b22; border: 1px solid #232a33; border-radius: 12px; padding: 20px; }
-.card h2 { margin: 0 0 14px; font-size: 15px; color: #cdd8e3; display:flex; align-items:center; gap:8px; }
-.stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 12px; }
-.stat { background:#0f141a; border:1px solid #232a33; border-radius:9px; padding:10px 16px; min-width:110px; }
-.stat b { display:block; font-size:22px; color:#5fb0ff; } .stat span{ font-size:12px; color:#8aa0b4; }
-.mat { display:flex; justify-content:space-between; align-items:center; padding:8px 12px;
-       background:#0f141a; border:1px solid #232a33; border-radius:8px; margin-bottom:6px; font-size:14px; }
-.mat button { background:none; border:none; color:#ff6b6b; cursor:pointer; font-size:16px; }
-button.primary { background:#2563eb; color:#fff; border:none; border-radius:8px; padding:10px 18px;
-                 font-size:14px; cursor:pointer; font-weight:600; }
-button.primary:hover { background:#1d4ed8; } button:disabled{ opacity:.5; cursor:not-allowed; }
-button.ghost { background:#0f141a; color:#e7ecf2; border:1px solid #333c47; border-radius:8px;
-               padding:9px 16px; cursor:pointer; font-size:14px; }
-label { font-size:13px; color:#9fb1c2; display:block; margin:10px 0 4px; }
-input, select, textarea { width:100%; background:#0f141a; border:1px solid #2b333d; color:#e7ecf2;
-                          border-radius:8px; padding:9px 11px; font-size:14px; font-family:inherit; }
-textarea { resize:vertical; }
-.row { display:flex; gap:14px; flex-wrap:wrap; } .row > div{ flex:1; min-width:130px; }
-.drop { border:2px dashed #33404d; border-radius:10px; padding:26px; text-align:center; color:#8aa0b4;
-        cursor:pointer; transition:.15s; } .drop.over{ border-color:#2563eb; background:#0f1a2e; color:#cfe0ff; }
-pre { background:#0b0e12; border:1px solid #232a33; border-radius:8px; padding:14px; overflow:auto;
-      max-height:320px; font-size:12.5px; white-space:pre-wrap; }
-.msg { font-size:13px; margin-top:10px; min-height:18px; }
-.ok{ color:#4ade80; } .err{ color:#ff6b6b; }
-.badge{ font-size:11px; padding:2px 9px; border-radius:20px; background:#233; color:#8aa0b4; }
-.badge.live{ background:#14361f; color:#4ade80; }
-.out{ background:#0b0e12; border:1px solid #232a33; border-radius:8px; padding:16px; min-height:60px;
-      font-size:14.5px; white-space:pre-wrap; }
-.hint{ font-size:12px; color:#7d8ea0; margin-top:6px; }
+:root{
+  --bg:#05060c; --cyan:#22d3ee; --mag:#e152ff; --vio:#7c5cff; --lime:#7cf67a;
+  --ink:#eaf2ff; --mut:#93a4c4; --glass:rgba(20,26,44,.55); --line:rgba(124,160,255,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,Roboto,sans-serif; color:var(--ink);
+  background:var(--bg); overflow-x:hidden; position:relative; min-height:100%;
+}
+/* fundo aurora animado */
+body::before{
+  content:""; position:fixed; inset:-30%; z-index:-2;
+  background:
+    radial-gradient(40% 40% at 20% 20%, rgba(34,211,238,.18), transparent 60%),
+    radial-gradient(45% 45% at 82% 25%, rgba(225,82,255,.16), transparent 60%),
+    radial-gradient(50% 50% at 50% 90%, rgba(124,92,255,.18), transparent 60%);
+  filter:blur(30px); animation:drift 22s ease-in-out infinite alternate;
+}
+body::after{ /* grade futurista */
+  content:""; position:fixed; inset:0; z-index:-1; opacity:.35;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                   linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px; mask-image:radial-gradient(circle at 50% 30%,#000,transparent 80%);
+}
+@keyframes drift{0%{transform:translate(-4%,-2%) scale(1)}100%{transform:translate(4%,3%) scale(1.1)}}
+
+header{display:flex;align-items:center;gap:18px;padding:26px 30px;position:relative}
+.orb{width:60px;height:60px;border-radius:50%;position:relative;flex:0 0 auto;
+  background:radial-gradient(circle at 35% 30%,#bffcff,var(--cyan) 40%,var(--vio) 85%);
+  box-shadow:0 0 30px rgba(34,211,238,.55),0 0 60px rgba(124,92,255,.35),inset 0 0 18px rgba(255,255,255,.5);
+  animation:breathe 3.4s ease-in-out infinite}
+.orb::before{content:"";position:absolute;inset:-8px;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent,var(--cyan),transparent 30%,var(--mag),transparent 70%);
+  opacity:.0;transition:opacity .4s;animation:spin 3.5s linear infinite}
+.orb.busy{animation:breathe 1s ease-in-out infinite}
+.orb.busy::before{opacity:.9}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.brand h1{margin:0;font-size:22px;font-weight:700;letter-spacing:.5px}
+.brand .sub{font-size:13px;color:var(--mut)}
+.brand b{background:linear-gradient(90deg,var(--cyan),var(--mag));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+main{max-width:960px;margin:0 auto;padding:8px 22px 60px;display:grid;gap:20px}
+.card{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:22px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 10px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.05);
+  position:relative;overflow:hidden}
+.card::after{content:"";position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),var(--mag),transparent);opacity:.5}
+.card h2{margin:0 0 16px;font-size:14px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--mut);display:flex;align-items:center;gap:9px}
+.card h2 .ic{font-size:17px;filter:drop-shadow(0 0 6px var(--cyan))}
+
+.stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.stat{flex:1;min-width:120px;background:rgba(8,12,24,.6);border:1px solid var(--line);
+  border-radius:14px;padding:14px 16px;position:relative}
+.stat b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;
+  background:linear-gradient(90deg,var(--cyan),var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut)}
+
+.mat{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;
+  background:rgba(8,12,24,.5);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;font-size:14px}
+.mat button{background:none;border:none;color:#ff7b9c;cursor:pointer;font-size:16px;transition:.2s}
+.mat button:hover{transform:scale(1.3);filter:drop-shadow(0 0 6px #ff7b9c)}
+
+label{font-size:12px;letter-spacing:.5px;color:var(--mut);display:block;margin:12px 0 5px}
+input,select,textarea{width:100%;background:rgba(6,10,20,.7);border:1px solid var(--line);color:var(--ink);
+  border-radius:11px;padding:11px 13px;font-size:14px;font-family:inherit;transition:.2s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+textarea{resize:vertical}
+.row{display:flex;gap:14px;flex-wrap:wrap}.row>div{flex:1;min-width:130px}
+
+button.primary{position:relative;background:linear-gradient(90deg,var(--cyan),var(--vio));color:#03040a;
+  border:none;border-radius:12px;padding:12px 22px;font-size:14px;font-weight:700;cursor:pointer;
+  letter-spacing:.4px;transition:.2s;box-shadow:0 6px 20px rgba(34,211,238,.3)}
+button.primary:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,92,255,.5)}
+button.primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+button.ghost{background:rgba(8,12,24,.6);color:var(--ink);border:1px solid var(--line);border-radius:12px;
+  padding:11px 18px;cursor:pointer;font-size:14px;transition:.2s}
+button.ghost:hover{border-color:var(--mag);color:#fff}
+button.ghost:disabled{opacity:.4;cursor:not-allowed}
+
+.drop{border:1.5px dashed rgba(124,160,255,.35);border-radius:16px;padding:30px;text-align:center;
+  color:var(--mut);cursor:pointer;transition:.25s;background:rgba(8,12,24,.35)}
+.drop:hover{border-color:var(--cyan);color:var(--ink)}
+.drop.over{border-color:var(--cyan);background:rgba(34,211,238,.08);color:#cfe0ff;transform:scale(1.01)}
+.drop b{color:var(--cyan)}
+
+pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:15px;overflow:auto;
+  max-height:300px;font-size:12.5px;line-height:1.55;white-space:pre-wrap;color:#9be89b;
+  font-family:'Cascadia Code',Consolas,monospace;text-shadow:0 0 8px rgba(124,246,122,.3)}
+
+.badge{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:4px 11px;border-radius:20px;
+  background:rgba(124,160,255,.12);color:var(--mut);border:1px solid var(--line)}
+.badge.live{background:rgba(124,246,122,.12);color:var(--lime);border-color:rgba(124,246,122,.4);
+  animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.55}}
+
+.prog{height:10px;border-radius:20px;background:rgba(8,12,24,.7);border:1px solid var(--line);
+  overflow:hidden;margin:6px 0 4px;display:none}
+.prog .fill{height:100%;width:0;border-radius:20px;
+  background:linear-gradient(90deg,var(--cyan),var(--mag));box-shadow:0 0 14px var(--cyan);transition:width .5s}
+.proglabel{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+
+.out{background:#04060d;border:1px solid var(--line);border-radius:14px;padding:18px;min-height:64px;
+  font-size:15px;line-height:1.7;white-space:pre-wrap;color:#dbe7ff}
+.out.think{color:var(--mut);font-style:italic}
+.msg{font-size:13px;margin-top:11px;min-height:18px}.ok{color:var(--lime)}.err{color:#ff7b9c}
+.hint{font-size:12px;color:var(--mut);margin-top:7px}
+.foot{text-align:center;color:var(--mut);font-size:12px;padding:10px}
 </style></head>
 <body>
-<header><h1>EVA · Painel de Estudo <small>— alimente, treine e converse com sua IA</small></h1></header>
+<header>
+  <div class="orb" id="orb"></div>
+  <div class="brand"><h1><b>EVA</b> · Núcleo Neural</h1>
+    <div class="sub">alimente · treine · converse — sua IA feita do zero</div></div>
+</header>
 <main>
 
   <div class="card">
-    <h2>📚 Corpus atual</h2>
-    <div class="stats" id="stats">
+    <h2><span class="ic">🧬</span> Memória da EVA</h2>
+    <div class="stats">
       <div class="stat"><b id="s-chars">–</b><span>caracteres</span></div>
       <div class="stat"><b id="s-words">–</b><span>palavras</span></div>
       <div class="stat"><b id="s-vocab">–</b><span>vocabulário</span></div>
@@ -298,124 +375,126 @@ pre { background:#0b0e12; border:1px solid #232a33; border-radius:8px; padding:1
   </div>
 
   <div class="card">
-    <h2>➕ Adicionar material</h2>
-    <div class="drop" id="drop">Arraste PDFs/TXT aqui ou <b>clique para escolher</b>
-      <input type="file" id="file" multiple accept=".pdf,.txt,.md" style="display:none">
-    </div>
-    <label>…ou cole um texto</label>
-    <textarea id="paste" rows="4" placeholder="Cole aqui qualquer texto para a EVA estudar…"></textarea>
-    <div style="margin-top:10px"><button class="ghost" id="addtext">Adicionar texto colado</button></div>
+    <h2><span class="ic">📡</span> Alimentar conhecimento</h2>
+    <div class="drop" id="drop">⬆ Solte PDFs/TXT aqui ou <b>clique para escolher</b>
+      <input type="file" id="file" multiple accept=".pdf,.txt,.md" style="display:none"></div>
+    <label>…ou injete um texto direto</label>
+    <textarea id="paste" rows="4" placeholder="Cole qualquer texto para a EVA absorver…"></textarea>
+    <div style="margin-top:11px"><button class="ghost" id="addtext">+ Injetar texto</button></div>
     <div class="msg" id="add-msg"></div>
   </div>
 
   <div class="card">
-    <h2>🧠 Treinar <span class="badge" id="train-badge">ocioso</span></h2>
+    <h2><span class="ic">⚡</span> Treinar a mente <span class="badge" id="train-badge">em repouso</span></h2>
     <div class="row">
-      <div><label>Tamanho do modelo</label><select id="preset">
-        <option value="small">small (~350k, rápido)</option>
-        <option value="medium" selected>medium (~1,8M)</option>
-        <option value="large">large (~4,8M, lento)</option></select></div>
-      <div><label>Tokenizador</label><select id="tokenizer">
-        <option value="char">char (letra a letra)</option>
-        <option value="bpe">bpe (subpalavras)</option></select></div>
-      <div><label>Passos</label><input type="number" id="steps" value="1500" min="100" step="100"></div>
+      <div><label>Tamanho do cérebro</label><select id="preset">
+        <option value="nano">nano · relâmpago</option>
+        <option value="small" selected>small · rápido</option>
+        <option value="medium">medium · esperto</option>
+        <option value="large">large · lento</option></select></div>
+      <div><label>Percepção</label><select id="tokenizer">
+        <option value="char">char · letra a letra</option>
+        <option value="bpe">bpe · subpalavras</option></select></div>
+      <div><label>Ciclos (passos)</label><input type="number" id="steps" value="1000" min="100" step="100"></div>
       <div><label>Dropout</label><input type="number" id="dropout" value="0.1" min="0" max="0.9" step="0.05"></div>
     </div>
-    <div style="margin-top:16px; display:flex; gap:10px">
-      <button class="primary" id="btn-train">Treinar EVA</button>
-      <button class="ghost" id="btn-stop">Parar</button>
+    <div style="margin-top:18px;display:flex;gap:11px">
+      <button class="primary" id="btn-train">⚡ Iniciar treino</button>
+      <button class="ghost" id="btn-stop">■ Parar</button>
     </div>
     <div class="msg" id="train-msg"></div>
-    <label style="margin-top:14px">Progresso</label>
-    <pre id="log">(o log do treino aparece aqui)</pre>
+    <div class="prog" id="prog"><div class="fill" id="progfill"></div></div>
+    <div class="proglabel" id="proglabel"></div>
+    <label style="margin-top:12px">Fluxo neural</label>
+    <pre id="log">&gt; aguardando ativação…</pre>
   </div>
 
   <div class="card">
-    <h2>💬 Gerar texto</h2>
-    <label>Início do texto (prompt)</label>
+    <h2><span class="ic">💬</span> Conversar com a EVA</h2>
+    <label>Semente do pensamento (prompt)</label>
     <input id="prompt" value="A arte da guerra" placeholder="Comece uma frase…">
-    <div class="row" style="margin-top:10px; align-items:end">
-      <div><label>Tokens a gerar</label><input type="number" id="maxtok" value="250" min="20" max="800" step="10"></div>
-      <div style="flex:0"><button class="primary" id="btn-gen">Gerar</button></div>
+    <div class="row" style="margin-top:11px;align-items:end">
+      <div><label>Extensão (tokens)</label><input type="number" id="maxtok" value="250" min="20" max="800" step="10"></div>
+      <div style="flex:0"><button class="primary" id="btn-gen">✨ Gerar</button></div>
     </div>
     <div class="hint" id="gen-hint">Requer um treino concluído.</div>
-    <div class="out" id="out" style="margin-top:12px"></div>
+    <div class="out" id="out" style="margin-top:13px"></div>
   </div>
 
+  <div class="foot">EVA — Transformer construído do zero em NumPy · roda 100% local</div>
 </main>
 <script>
-const $ = s => document.querySelector(s);
-const fmt = n => n.toLocaleString('pt-BR');
+const $=s=>document.querySelector(s);
+const fmt=n=>n.toLocaleString('pt-BR');
 
-async function refresh() {
-  const r = await fetch('/status'); const s = await r.json();
-  $('#s-chars').textContent = fmt(s.corpus.chars);
-  $('#s-words').textContent = fmt(s.corpus.words);
-  $('#s-vocab').textContent = fmt(s.corpus.vocab);
-  $('#s-mats').textContent  = s.materials.length;
-  $('#matlist').innerHTML = s.materials.length ? s.materials.map(m =>
-    `<div class="mat"><span>📄 ${m.name} <span style="color:#5b6b7a">· ${fmt(m.size)} B</span></span>
-     <button onclick="removeMat('${m.name.replace(/'/g,"\\'")}')">✕</button></div>`).join('') :
-    '<div style="color:#7d8ea0;font-size:13px">Nenhum material ainda.</div>';
-  const b = $('#train-badge');
-  b.textContent = s.training ? 'treinando…' : 'ocioso';
-  b.className = 'badge' + (s.training ? ' live' : '');
-  $('#btn-train').disabled = s.training;
-  $('#btn-stop').disabled = !s.training;
-  $('#btn-gen').disabled = !s.has_checkpoint;
-  $('#gen-hint').style.display = s.has_checkpoint ? 'none' : 'block';
-  if (s.training) { const lr = await fetch('/log'); const t = await lr.text();
-    const el = $('#log'); el.textContent = t || '(iniciando…)'; el.scrollTop = el.scrollHeight; }
+async function refresh(){
+  const s=await(await fetch('/status')).json();
+  $('#s-chars').textContent=fmt(s.corpus.chars);
+  $('#s-words').textContent=fmt(s.corpus.words);
+  $('#s-vocab').textContent=fmt(s.corpus.vocab);
+  $('#s-mats').textContent=s.materials.length;
+  $('#matlist').innerHTML=s.materials.length?s.materials.map(m=>
+    `<div class="mat"><span>🧩 ${m.name} <span style="color:#5b6b7a">· ${fmt(m.size)} B</span></span>
+     <button onclick="removeMat('${m.name.replace(/'/g,"\\'")}')">✕</button></div>`).join(''):
+    '<div style="color:var(--mut);font-size:13px">Nenhum material ainda — alimente a EVA abaixo.</div>';
+  const b=$('#train-badge'),orb=$('#orb');
+  b.textContent=s.training?'treinando':'em repouso';
+  b.className='badge'+(s.training?' live':'');
+  orb.className='orb'+(s.training?' busy':'');
+  $('#btn-train').disabled=s.training;
+  $('#btn-stop').disabled=!s.training;
+  $('#btn-gen').disabled=!s.has_checkpoint;
+  $('#gen-hint').style.display=s.has_checkpoint?'none':'block';
+  if(s.training){
+    const t=await(await fetch('/log')).text();
+    const el=$('#log');el.textContent=t||'> iniciando…';el.scrollTop=el.scrollHeight;
+    const ms=[...t.matchAll(/passo\s+(\d+)\/(\d+)\s+\|\s+treino\s+([\d.]+)\s+\|\s+val\s+([\d.]+)/g)];
+    const prog=$('#prog');
+    if(ms.length){const m=ms[ms.length-1],cur=+m[1],tot=+m[2];
+      prog.style.display='block';$('#progfill').style.width=(100*cur/tot)+'%';
+      $('#proglabel').textContent=`passo ${cur}/${tot} · treino ${m[3]} · val ${m[4]}`;}
+    else{prog.style.display='none';$('#proglabel').textContent='';}
+  }else{$('#prog').style.display='none';$('#proglabel').textContent='';}
 }
+function flash(id,msg,ok){const e=$(id);e.textContent=msg;e.className='msg '+(ok?'ok':'err');}
 
-function flash(id, msg, ok) { const e = $(id); e.textContent = msg; e.className = 'msg ' + (ok?'ok':'err'); }
-
-async function uploadFiles(files) {
-  for (const f of files) {
-    flash('#add-msg', `Enviando ${f.name}…`, true);
-    const r = await fetch('/upload?name=' + encodeURIComponent(f.name),
-                          { method:'POST', body: f });
-    const j = await r.json(); flash('#add-msg', j.msg, j.ok); await refresh();
-  }
+async function uploadFiles(files){
+  for(const f of files){flash('#add-msg',`📡 Enviando ${f.name}…`,true);
+    const j=await(await fetch('/upload?name='+encodeURIComponent(f.name),{method:'POST',body:f})).json();
+    flash('#add-msg',j.msg,j.ok);await refresh();}
 }
-window.removeMat = async name => {
-  const r = await fetch('/remove', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({name})}); const j = await r.json(); flash('#add-msg', j.msg, j.ok); refresh();
-};
+window.removeMat=async name=>{
+  const j=await(await fetch('/remove',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name})})).json();flash('#add-msg',j.msg,j.ok);refresh();};
 
-const drop = $('#drop'), file = $('#file');
-drop.onclick = () => file.click();
-file.onchange = () => uploadFiles(file.files);
-drop.ondragover = e => { e.preventDefault(); drop.classList.add('over'); };
-drop.ondragleave = () => drop.classList.remove('over');
-drop.ondrop = e => { e.preventDefault(); drop.classList.remove('over'); uploadFiles(e.dataTransfer.files); };
+const drop=$('#drop'),file=$('#file');
+drop.onclick=()=>file.click();
+file.onchange=()=>uploadFiles(file.files);
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over')};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');uploadFiles(e.dataTransfer.files)};
 
-$('#addtext').onclick = async () => {
-  const text = $('#paste').value;
-  const r = await fetch('/add_text', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({text})}); const j = await r.json();
-  flash('#add-msg', j.msg, j.ok); if (j.ok) $('#paste').value=''; refresh();
-};
+$('#addtext').onclick=async()=>{
+  const j=await(await fetch('/add_text',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:$('#paste').value})})).json();
+  flash('#add-msg',j.msg,j.ok);if(j.ok)$('#paste').value='';refresh();};
 
-$('#btn-train').onclick = async () => {
-  const body = { preset:$('#preset').value, tokenizer:$('#tokenizer').value,
-    steps:$('#steps').value, dropout:$('#dropout').value, bpe_vocab:512 };
-  const r = await fetch('/train', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(body)}); const j = await r.json(); flash('#train-msg', j.msg, j.ok); refresh();
-};
-$('#btn-stop').onclick = async () => {
-  const r = await fetch('/stop', {method:'POST'}); const j = await r.json();
-  flash('#train-msg', j.msg, j.ok); refresh();
-};
+$('#btn-train').onclick=async()=>{
+  const body={preset:$('#preset').value,tokenizer:$('#tokenizer').value,
+    steps:$('#steps').value,dropout:$('#dropout').value,bpe_vocab:512};
+  const j=await(await fetch('/train',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)})).json();flash('#train-msg',j.msg,j.ok);refresh();};
+$('#btn-stop').onclick=async()=>{
+  const j=await(await fetch('/stop',{method:'POST'})).json();flash('#train-msg',j.msg,j.ok);refresh();};
 
-$('#btn-gen').onclick = async () => {
-  const btn = $('#btn-gen'); btn.disabled = true; $('#out').textContent = 'Gerando…';
-  const r = await fetch('/generate', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({prompt:$('#prompt').value, max_tokens:$('#maxtok').value})});
-  const j = await r.json(); $('#out').textContent = j.text || '(sem saída)'; btn.disabled = false;
-};
+$('#btn-gen').onclick=async()=>{
+  const btn=$('#btn-gen'),out=$('#out');btn.disabled=true;
+  out.className='out think';out.textContent='✨ pensando…';
+  const j=await(await fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:$('#prompt').value,max_tokens:$('#maxtok').value})})).json();
+  out.className='out';out.textContent=j.text||'(sem saída)';btn.disabled=false;};
 
-refresh(); setInterval(refresh, 2500);
+refresh();setInterval(refresh,2000);
 </script>
 </body></html>"""
 
