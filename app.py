@@ -165,6 +165,16 @@ class Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         return self.rfile.read(length) if length else b""
 
+    def _send_file(self, path, filename):
+        with open(path, "rb") as f:
+            data = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
     # ------------------------------------------------------------------
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
@@ -179,6 +189,16 @@ class Handler(BaseHTTPRequestHandler):
             })
         elif path == "/log":
             self._send(200, read_log(), "text/plain; charset=utf-8")
+        elif path == "/download_model":
+            if os.path.exists(CKPT):
+                self._send_file(CKPT, "eva_cerebro.pkl")
+            else:
+                self._send(404, "sem modelo treinado", "text/plain; charset=utf-8")
+        elif path == "/download_corpus":
+            if os.path.exists(CORPUS):
+                self._send_file(CORPUS, "eva_corpus.txt")
+            else:
+                self._send(404, "sem corpus", "text/plain; charset=utf-8")
         else:
             self._send(404, "não encontrado", "text/plain; charset=utf-8")
 
@@ -195,6 +215,16 @@ class Handler(BaseHTTPRequestHandler):
                     f.write(self._body())
                 stats = rebuild_corpus()
                 self._json({"ok": True, "msg": f"'{name}' adicionado.", "corpus": stats})
+
+            elif path == "/upload_model":
+                if training_active():
+                    return self._json({"ok": False, "msg": "Pare o treino antes de restaurar."}, 400)
+                body = self._body()
+                if len(body) < 10:
+                    return self._json({"ok": False, "msg": "Arquivo vazio."}, 400)
+                with open(CKPT, "wb") as f:
+                    f.write(body)
+                self._json({"ok": True, "msg": "Cérebro restaurado. Já dá para gerar texto."})
 
             elif path == "/add_text":
                 data = json.loads(self._body() or b"{}")
@@ -410,6 +440,18 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
   </div>
 
   <div class="card">
+    <h2><span class="ic">💾</span> Salvar / restaurar cérebro</h2>
+    <div class="hint" style="margin:0 0 12px">Baixe o modelo treinado para o seu dispositivo e restaure depois — em
+      qualquer aparelho. Assim o progresso não se perde mesmo se o servidor reiniciar.</div>
+    <div style="display:flex;gap:11px;flex-wrap:wrap">
+      <button class="ghost" id="btn-dl">⬇ Baixar cérebro</button>
+      <button class="ghost" id="btn-ul">⬆ Restaurar cérebro</button>
+      <input type="file" id="modelfile" accept=".pkl" style="display:none">
+    </div>
+    <div class="msg" id="model-msg"></div>
+  </div>
+
+  <div class="card">
     <h2><span class="ic">💬</span> Conversar com a EVA</h2>
     <label>Semente do pensamento (prompt)</label>
     <input id="prompt" value="A arte da guerra" placeholder="Comece uma frase…">
@@ -444,6 +486,7 @@ async function refresh(){
   $('#btn-train').disabled=s.training;
   $('#btn-stop').disabled=!s.training;
   $('#btn-gen').disabled=!s.has_checkpoint;
+  $('#btn-dl').disabled=!s.has_checkpoint;
   $('#gen-hint').style.display=s.has_checkpoint?'none':'block';
   if(s.training){
     const t=await(await fetch('/log')).text();
@@ -493,6 +536,14 @@ $('#btn-gen').onclick=async()=>{
   const j=await(await fetch('/generate',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({prompt:$('#prompt').value,max_tokens:$('#maxtok').value})})).json();
   out.className='out';out.textContent=j.text||'(sem saída)';btn.disabled=false;};
+
+$('#btn-dl').onclick=()=>{window.location='/download_model'};
+$('#btn-ul').onclick=()=>$('#modelfile').click();
+$('#modelfile').onchange=async()=>{
+  const f=$('#modelfile').files[0];if(!f)return;
+  flash('#model-msg','⬆ Restaurando…',true);
+  const j=await(await fetch('/upload_model',{method:'POST',body:f})).json();
+  flash('#model-msg',j.msg,j.ok);refresh();};
 
 refresh();setInterval(refresh,2000);
 </script>

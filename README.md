@@ -86,7 +86,48 @@ fixo `.onrender.com` conectado direto ao repositório. O projeto já traz o
 No plano grátis o serviço "hiberna" após alguns minutos parado e leva
 ~30–50s para acordar no primeiro acesso; depois disso responde normal.
 Como o disco é temporário, materiais e checkpoints valem para a sessão
-atual (para guardar de vez, treine e baixe/veja o resultado na hora).
+atual (para guardar de vez, use "Baixar cérebro" — veja abaixo).
+
+## Publicar no Hugging Face Spaces (Docker)
+
+O projeto traz um `Dockerfile`, então roda em qualquer nuvem com Docker. O
+**Hugging Face Spaces** é o mais indicado para IA: link fixo, grátis e
+sempre disponível (acorda sozinho ao ser acessado).
+
+1. Conta grátis em **https://huggingface.co**.
+2. **New → Space**, escolha **SDK: Docker → Blank**.
+3. No Space, crie dois arquivos (pelo próprio navegador do iPad):
+   - `README.md` com o cabeçalho:
+     ```
+     ---
+     title: EVA
+     sdk: docker
+     app_port: 7860
+     ---
+     ```
+   - `Dockerfile` com uma linha que clona este repositório e reusa tudo:
+     ```dockerfile
+     FROM python:3.11-slim
+     RUN pip install --no-cache-dir numpy pymupdf
+     RUN git clone -b claude/custom-ai-from-scratch-dx8d5p \
+         https://github.com/ciceromayk/EVA.git /app
+     WORKDIR /app
+     ENV PORT=7860
+     CMD ["python", "app.py"]
+     ```
+4. O Space monta e publica sozinho. A URL fixa abre em qualquer aparelho.
+
+## Salvar seu progresso (qualquer dispositivo)
+
+Hosts gratuitos têm disco temporário, então o painel tem persistência
+portátil embutida, no cartão **💾 Salvar / restaurar cérebro**:
+
+- **⬇ Baixar cérebro** — salva o modelo treinado (`eva_cerebro.pkl`) no seu
+  dispositivo.
+- **⬆ Restaurar cérebro** — reenvia esse arquivo depois (em qualquer
+  aparelho) para continuar de onde parou, sem treinar de novo.
+
+Assim você treina quando quiser, de onde quiser, e leva a EVA com você.
 
 
 ## Uso por linha de comando
