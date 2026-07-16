@@ -16,14 +16,15 @@ Tudo o que faz uma rede neural aprender está aqui e é legível:
 
 ```
 eva/
-  autograd.py    motor de autograd (Tensor + backpropagation)
-  nn.py          camadas: Linear, LayerNorm, atenção, MLP, Block
-  model.py       o modelo GPT completo + geração de texto
-  optim.py       otimizador AdamW e clip de gradiente
-  tokenizer.py   tokenizador em nível de caractere
-train.py         script de treino e amostragem
-data/corpus.txt  corpus de exemplo (português)
-tests/           checagem numérica do autograd
+  autograd.py         motor de autograd (Tensor + backpropagation)
+  nn.py               camadas: Linear, LayerNorm, atenção, MLP, Block
+  model.py            o modelo GPT completo + geração de texto
+  optim.py            otimizador AdamW e clip de gradiente
+  tokenizer.py        tokenizador em nível de caractere
+train.py              script de treino e amostragem (com presets)
+tools/build_corpus.py extrai texto de PDFs para montar o corpus
+data/corpus.txt       corpus de treino (gerado a partir de PDFs)
+tests/                checagem numérica do autograd
 ```
 
 ## Como usar
@@ -33,8 +34,8 @@ Requisito único: `numpy`.
 ```bash
 pip install numpy
 
-# treinar (CPU, alguns minutos)
-python train.py --steps 2000
+# treinar (CPU) — usa o preset "medium" por padrão
+python train.py --steps 1500
 
 # gerar texto a partir do checkpoint salvo
 python train.py --generate "A EVA "
@@ -43,8 +44,37 @@ python train.py --generate "A EVA "
 PYTHONPATH=. python tests/test_autograd.py
 ```
 
-Ajuste o tamanho do modelo pelos argumentos `--n-layer`, `--n-head`,
-`--n-embd`, `--block-size`. Treine no seu próprio texto com `--data meu.txt`.
+### Tamanho do modelo (presets)
+
+Escolha o tamanho com `--preset`. Modelos maiores aprendem padrões mais
+ricos, mas exigem mais tempo de CPU:
+
+| preset   | parâmetros | camadas | contexto | tempo aprox. (1500 passos) |
+|----------|-----------:|:-------:|:--------:|:--------------------------:|
+| `small`  |    ~350 mil |    3    |    64    |  ~9 min                    |
+| `medium` |    ~1,8 mi  |    4    |    96    |  ~19 min (padrão)          |
+| `large`  |    ~4,8 mi  |    6    |   128    |  ~40 min                   |
+
+```bash
+python train.py --preset large --steps 2000
+```
+
+Também dá para sobrescrever qualquer dimensão individual
+(`--n-layer`, `--n-head`, `--n-embd`, `--block-size`, `--batch-size`).
+
+### Treinar no seu próprio material (PDFs)
+
+O corpus incluído foi gerado a partir de PDFs sobre lógica de programação,
+Python e modelos de linguagem. Para montar o seu:
+
+```bash
+pip install pymupdf
+python tools/build_corpus.py livro1.pdf livro2.pdf -o data/corpus.txt
+python train.py --preset medium --steps 1500
+```
+
+O script extrai o texto, remove cabeçalhos/rodapés repetidos, junta
+palavras hifenizadas e normaliza o espaçamento.
 
 ## Como a EVA funciona (visão geral)
 
@@ -59,7 +89,7 @@ Ajuste o tamanho do modelo pelos argumentos `--n-layer`, `--n-head`,
    gradientes por backpropagation; o **AdamW** ajusta os pesos.
 6. **Geração** — amostra-se um caractere de cada vez, realimentando o modelo.
 
-O modelo padrão tem ~350 mil parâmetros e roda tranquilamente em CPU.
+O preset padrão (`medium`) tem ~1,8 milhão de parâmetros e roda em CPU.
 
 ## Nota
 

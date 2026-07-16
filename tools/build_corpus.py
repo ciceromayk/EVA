@@ -1,0 +1,91 @@
+"""Extrai texto de PDFs e monta um corpus de treino limpo para a EVA.
+
+Uso:
+    python tools/build_corpus.py entrada1.pdf entrada2.pdf -o data/corpus.txt
+
+A limpeza remove cabeçalhos/rodapés repetidos, hifenização de quebra de
+linha e espaços em excesso, deixando um texto contínuo adequado para
+treino em nível de caractere.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import unicodedata
+from collections import Counter
+
+import fitz  # PyMuPDF
+
+
+def extract_pages(path: str) -> list[str]:
+    doc = fitz.open(path)
+    pages = [page.get_text("text") for page in doc]
+    doc.close()
+    return pages
+
+
+def strip_repeated_lines(pages: list[str]) -> list[str]:
+    """Remove linhas que se repetem em muitas páginas (cabeçalho/rodapé)."""
+    counts: Counter[str] = Counter()
+    for page in pages:
+        for line in {ln.strip() for ln in page.splitlines() if ln.strip()}:
+            counts[line] += 1
+    threshold = max(3, len(pages) // 3)
+    boilerplate = {ln for ln, c in counts.items() if c >= threshold and len(ln) < 80}
+
+    cleaned = []
+    for page in pages:
+        kept = [ln for ln in page.splitlines() if ln.strip() not in boilerplate]
+        cleaned.append("\n".join(kept))
+    return cleaned
+
+
+def clean_text(text: str) -> str:
+    text = unicodedata.normalize("NFC", text)
+    # espaços não-quebráveis e afins viram espaço comum
+    text = text.replace("\xa0", " ").replace("​", "")
+    # líderes pontilhados de sumário ("....") e marcadores de citação [12]
+    text = re.sub(r"\.{4,}", " ", text)
+    text = re.sub(r"\[\d+\]", "", text)
+    # junta palavras hifenizadas quebradas no fim da linha: "progra-\nmação"
+    text = re.sub(r"-\n(?=\w)", "", text)
+    # quebra de linha isolada dentro de parágrafo vira espaço
+    text = re.sub(r"(?<![\n.:;!?])\n(?![\n])", " ", text)
+    # remove números de página soltos
+    text = re.sub(r"\n\s*\d+\s*\n", "\n", text)
+    # normaliza espaços e linhas em branco excessivas
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    # descarta caracteres de controle raros, preservando acentos e pontuação
+    text = "".join(ch for ch in text if ch == "\n" or unicodedata.category(ch)[0] != "C")
+    return text.strip()
+
+
+def build(paths: list[str]) -> str:
+    parts = []
+    for path in paths:
+        pages = strip_repeated_lines(extract_pages(path))
+        parts.append(clean_text("\n".join(pages)))
+    return "\n\n".join(parts) + "\n"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Monta corpus a partir de PDFs")
+    parser.add_argument("pdfs", nargs="+", help="arquivos PDF de entrada")
+    parser.add_argument("-o", "--output", default="data/corpus.txt")
+    args = parser.parse_args()
+
+    corpus = build(args.pdfs)
+    with open(args.output, "w", encoding="utf-8") as f:
+        f.write(corpus)
+
+    vocab = sorted(set(corpus))
+    print(f"Corpus escrito em {args.output}")
+    print(f"  {len(corpus):,} caracteres")
+    print(f"  {len(corpus.split()):,} palavras (aprox.)")
+    print(f"  {len(vocab)} caracteres distintos (vocabulário)")
+
+
+if __name__ == "__main__":
+    main()

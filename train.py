@@ -14,12 +14,21 @@ from __future__ import annotations
 import argparse
 import os
 import pickle
+import time
 
 import numpy as np
 
-from eva import AdamW, CharTokenizer, GPT, GPTConfig, clip_grad_norm
+from eva import AdamW, CharTokenizer, GPT, GPTConfig, clip_grad_norm, no_grad
 
 CKPT_PATH = "eva_checkpoint.pkl"
+
+# Presets de arquitetura. "medium" e "large" são os "modelos maiores":
+# aprendem estruturas mais ricas do corpus, ao custo de mais tempo de CPU.
+PRESETS = {
+    "small":  dict(n_layer=3, n_head=4, n_embd=96,  block_size=64,  batch_size=16),
+    "medium": dict(n_layer=4, n_head=6, n_embd=192, block_size=96,  batch_size=16),
+    "large":  dict(n_layer=6, n_head=8, n_embd=256, block_size=128, batch_size=12),
+}
 
 
 def get_batch(data: np.ndarray, block_size: int, batch_size: int, rng):
@@ -53,18 +62,22 @@ def train(args) -> None:
 
     tokenizer = CharTokenizer.from_text(text)
     data = np.array(tokenizer.encode(text), dtype=np.int64)
-    print(f"Corpus: {len(text)} caracteres, vocabulário: {tokenizer.vocab_size}")
+    # separa os últimos 10% para validação (mede generalização, não decoreba)
+    split = int(len(data) * 0.9)
+    train_data, val_data = data[:split], data[split:]
+    print(f"Corpus: {len(text):,} caracteres, vocabulário: {tokenizer.vocab_size}")
 
     config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
                        n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd)
     model = GPT(config)
-    print(f"Modelo EVA: {model.num_params():,} parâmetros")
+    print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros\n")
 
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     rng = np.random.default_rng(args.seed)
+    start = time.time()
 
     for step in range(1, args.steps + 1):
-        x, y = get_batch(data, config.block_size, args.batch_size, rng)
+        x, y = get_batch(train_data, config.block_size, args.batch_size, rng)
         _, loss = model.forward(x, y)
 
         model.zero_grad()
@@ -73,11 +86,27 @@ def train(args) -> None:
         optimizer.step()
 
         if step % args.log_every == 0 or step == 1:
-            print(f"passo {step:5d}/{args.steps} | loss {float(loss.data):.4f}")
+            vloss = estimate_val_loss(model, val_data, config, args.batch_size, rng)
+            elapsed = time.time() - start
+            print(f"passo {step:5d}/{args.steps} | treino {float(loss.data):.4f} "
+                  f"| val {vloss:.4f} | {elapsed:6.1f}s")
 
     save_checkpoint(model, tokenizer)
     print(f"\nCheckpoint salvo em {CKPT_PATH}\n")
-    sample(model, tokenizer, prompt="A ", max_new_tokens=200, rng=rng)
+    sample(model, tokenizer, prompt="A ", max_new_tokens=300, rng=rng)
+
+
+def estimate_val_loss(model, val_data, config, batch_size, rng, iters=5):
+    """Loss média em janelas de validação, sem construir grafo de gradiente."""
+    if len(val_data) <= config.block_size + 1:
+        return float("nan")
+    with no_grad():
+        total = 0.0
+        for _ in range(iters):
+            x, y = get_batch(val_data, config.block_size, batch_size, rng)
+            _, loss = model.forward(x, y)
+            total += float(loss.data)
+    return total / iters
 
 
 def sample(model, tokenizer, prompt, max_new_tokens, rng=None):
@@ -93,18 +122,26 @@ def sample(model, tokenizer, prompt, max_new_tokens, rng=None):
 def main():
     parser = argparse.ArgumentParser(description="Treina/roda a EVA")
     parser.add_argument("--data", default="data/corpus.txt")
-    parser.add_argument("--steps", type=int, default=2000)
-    parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--block-size", type=int, default=64)
-    parser.add_argument("--n-layer", type=int, default=3)
-    parser.add_argument("--n-head", type=int, default=4)
-    parser.add_argument("--n-embd", type=int, default=96)
+    parser.add_argument("--preset", choices=list(PRESETS), default="medium",
+                        help="tamanho do modelo (padrão: medium)")
+    parser.add_argument("--steps", type=int, default=1500)
+    parser.add_argument("--batch-size", type=int, default=None)
+    parser.add_argument("--block-size", type=int, default=None)
+    parser.add_argument("--n-layer", type=int, default=None)
+    parser.add_argument("--n-head", type=int, default=None)
+    parser.add_argument("--n-embd", type=int, default=None)
     parser.add_argument("--lr", type=float, default=3e-3)
-    parser.add_argument("--log-every", type=int, default=100)
+    parser.add_argument("--log-every", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--generate", metavar="PROMPT",
                         help="gera texto a partir do checkpoint salvo e sai")
     args = parser.parse_args()
+
+    # Preenche a arquitetura pelo preset; flags explícitas têm prioridade.
+    preset = PRESETS[args.preset]
+    for key, value in preset.items():
+        if getattr(args, key) is None:
+            setattr(args, key, value)
 
     if args.generate is not None:
         if not os.path.exists(CKPT_PATH):
