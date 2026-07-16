@@ -1,0 +1,24 @@
+# Configuração do Replit — roda o painel da EVA na nuvem.
+# Ao clicar em "Run", instala as dependências e sobe o servidor web;
+# o Replit abre uma janela (webview) com o painel, que você acessa de
+# qualquer lugar, inclusive do Safari no iPad.
+
+run = "pip install -q -r requirements.txt && python app.py"
+entrypoint = "app.py"
+modules = ["python-3.11"]
+
+[nix]
+channel = "stable-24_05"
+
+# Mapeia a porta do app (8000) para a porta pública 80 do Replit.
+[[ports]]
+localPort = 8000
+externalPort = 80
+
+[env]
+PORT = "8000"
+
+# Permite (opcionalmente) publicar como app permanente via "Deploy".
+[deployment]
+run = ["sh", "-c", "pip install -q -r requirements.txt && python app.py"]
+deploymentTarget = "cloudrun"

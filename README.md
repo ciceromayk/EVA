@@ -50,6 +50,27 @@ No painel você pode:
 O material enviado fica em `materials/` e o corpus é montado a partir dele.
 Na primeira execução, o corpus atual é preservado como material inicial.
 
+## Rodar no iPad / celular (via Replit)
+
+O iPad não roda Python facilmente, mas o painel é uma página web — então
+basta rodar a EVA na nuvem e abrir no Safari. O jeito mais simples é o
+**Replit**, e o repositório já vem pronto (`.replit` + `requirements.txt`):
+
+1. Crie uma conta grátis em **https://replit.com** (dá para usar o próprio
+   iPad).
+2. Clique em **Create Repl → Import from GitHub** e cole a URL do
+   repositório (`https://github.com/ciceromayk/EVA`), escolhendo o branch
+   `claude/custom-ai-from-scratch-dx8d5p`.
+3. Clique em **Run**. O Replit instala tudo e sobe o painel; uma janela
+   (webview) abre com a EVA.
+4. Toque no ícone de **abrir em nova aba** para usar em tela cheia — e
+   adicione à tela inicial do iPad para virar um "app".
+
+Tudo (upload de PDF, treino, geração) roda nos servidores do Replit; o
+iPad só mostra a tela. Dica: use o preset **`nano`** ou **`small`** para o
+treino terminar rápido.
+
+
 ## Uso por linha de comando
 
 Requisito mínimo: `numpy` (e `pymupdf` para ler PDFs).
