@@ -1,5 +1,7 @@
 1 Introdução à Lógica de Programação 2 Índice Definição de lógica 3 Algoritimizando a lógica 3 Exemplo de Algoritmo 3 Pseudo-Liguagem ou Pseudo-Codigo 4 Tipos de dados 4 Constantes 5 Variável 5 Declaração de Variável 5 Atribuindo Valores as Variáveis 6 Operadores 6 Operadores Aritméticos 6 Operadores Relacionais ou Comparativos 6 Operadores Lógicos 7 Construindo Expressões 7 Modularização de Expressões 8 Prioridades 8 Comandos de Entrada e Saída 8 Primeiros Algoritmos 8 Estruturas Condicionais 14 SE (IF) 14 ESCOLHA CASO (SWITCH CASE) 16 Estruturas de repetição 17 Estrutura PARA FACA(FOR) 17 Estrutura ENQUANTO FACA (WHILE) 19 Vetor e Matriz 20 3 DEFINIÇÃO DE LÓGICA Logica trata da correção do pensamento, como a filosofia, procura saber por que pensamos assim e não daquele jeito. Com a arte ou técnica, nos ensina a usar corretamente as leis do pensamento. Poderíamos dizer também que a logica é a arte de pensar corretamente e, visto que a forma mais complexa do pensamento é o raciocínio, a logica estuda ou tem em vista a “correção do raciocínio”. Podemos ainda dizer que logica tem em vista a “ordem da razão”. Isto dá a entender que a nossa razão pode funcionar desordenadamente. Por isso também se pode dizer que a logica ensina a colocar Ordem no Pensamento. ALGORITIMIZANDO A LÓGICA Construir algoritmo é o objetivo fundamental de toda a programação, mas afinal o que é algoritmo? Algoritmo é uma sequencia de passos que visam atingir um objetivo bem definido. Algoritmo é a descrição de um conjunto de ações que obedecidas, resultam numa sucessão finita de passos, atingindo o objetivo. Em geral, um algoritmo destina-se a resolver um problema: fixa um padrão de comportamento a ser seguido, uma norma de execução a ser trilhada, com vista a alcançar, como resultado final a solução de um problema. Resumindo algoritmo nada mais é que um passo a passo, de forma ordenada para executar uma determinada finalidade. Exemplo de Algoritmo Inicio Objetivo: Fazer uma ligação Passo 1: Pegar o telefone e destravar Passo 2: Discar o numero desejado Passo 3: Mandar chamar Passo 4: Ser der sinal de chamar 4.1: Conversar 4.2: Desligar 4.3: Guardar Telefone Passo 5: Senão 5.1 repetir Fim 4 Este foi um exemplo simples de como criar um algoritmo, e todo programa é simplesmente isso um algoritmo em uma determinada linguagem de programação para executar uma tarefa cotidiana. PSEUDO-LIGUAGEM OU PSEUDO-CODIGO Este é um tipo de linguagem utilizada para aprendizado de logica de programação, geralmente na língua nativa de quem está aprendendo, facilitando o entendimento das funcionalidades do algoritmo. Aqui nesta apostila será utilizado a pseudo-linguagem portugol. Uma pseudo-linguagem não pode ser interpretada por um ambiente computacional, o portugol e estudado em um programa chamado VISUAL G que pode ser facilmente tanto para PC quanto para celular, o link para baixar os dois estão disponíveis no blog, ou podem baixar no GOOGLE PLAY (Android Visual) e no BAIXAKI (Visual G). Também estará disponível o link do manual do programa visual g. TIPOS DE DADOS Antes começar a criar algoritmos é primordial entender algumas coisas como fundamentais, e uma dessas coisas são os tipos dados primitivos da logica de programação. Estes são divididos em 4 tipos. Inteiro: Toda informação numérica que faça parte do conjunto de números inteiros, sendo ele negativo ou positivo. Exemplos: Ela tem 15 anos. Hoje esta fazendo -2 graus. Real: Toda informação que faça parte do conjunto dos números reais, sendo ele negativo ou positivo. Exemplos: Minha altura é 1,73 cm. Seu troco e R$ 5,65. Caractere: Toda e qualquer informação composta por um conjunto caracteres alfanuméricos incluindo caracteres especiais. Exemplos: Sua comissão é 10% Logico: Toda informação que pode assumir apenas duas situações. Exemplos: Verdadeiro ou Falso Ligado ou Desligado 0 ou 1 5 CONSTANTES É definido como constante toda informação que não sofre nenhuma variação no decorrer do tempo. 3,1416 VARIÁVEL É definido como variável toda informação que pode ser alterada em algum instante no decorrer do tempo. Temperatura, peso DECLARAÇÃO DE VARIÁVEL As variáveis são armazenadas na memoria do ambiente computacional (memória ram), para declarar uma variável deve-se seguir uma regra. Uma variável não pode começar com números e nem pode conter caracteres especiais, mas após a primeira letra pode-se colocar números. Exemplos: Declarações Validas Declarações Invalidas X, y, nome, x2 2x, nome@,a-b Uma variável ao ser declarada pode ser utilizada durante o algoritmo varias vezes mas não pode ser repetida em uma declaração. Além disso a variável deve também receber um tipo, ou seja, ao declarar uma variável além de dar o nome para ela e preciso informar ao sistema que tipo de informação ela vai receber. Exemplos: idade: inteiro; nome: caractere; peso,troco:real; controle:logico; Sempre se segue este conceito Nome variável: tipo; OBS: Depois de declarar uma ou uma lista de variáveis usa-se dois pontos (:) para dar o tipo da variável. 6 Atribuindo Valores as Variáveis Para passar um valor para uma variável usa-se (<-) sinal de menor que mais traço, lembrando que uma variável só pode receber um valor de acordo com seu tipo, por exemplo, uma variável do tipo inteiro só pode receber numero inteiros. idade:inteiro; idade<-15; No exemplo dado a variável idade está recebendo o numero 15, uma variável pode receber outra variável do mesmo tipo. idade,anos:inteiro; x<-15; idade<-x; Neste exemplo a variável x recebe o valor 15 e logo depois passa este valor para a variável idade. OPERADORES Operadores são símbolos que servem para efetuar operações aritméticas ou relacionais (comparativas) no algoritmo. Operadores Aritméticos Este é o conjunto de símbolos matemáticos que servem para efetuar operações matemáticas. SIMBOLO NOME + Adição * Multiplicação ** Potenciação - Subtração / Divisão // Radiciação Operadores Relacionais ou Comparativos Este é o conjunto de símbolos que servem para comparar valores. 7 SIMBOLO NOME > Maior que < Menor que >= Maior ou igual a <= Menor ou igual a = Igual <> Diferente Ainda existe o operador mod e div que só podem ser utilizados em números inteiros. MOD – Retorna o resto de uma divisão DIV – Retorna quociente da divisão inteira 9 MOD 2 = 1 9 DIV 2 = 4 Operadores Lógicos Estes operadores sempre irão retornar valores lógicos, ou seja, verdadeiro ou falso. São utilizados em expressões. E (AND)- Retorna verdadeiro com as duas partes da expressão são verdadeiras, neste caso se qualquer uma das partes for falsa o resultado será falso. OU (OR) – Retorna verdadeiro quando uma das partes da expressão for verdadeira, neste caso só é preciso que uma dê o valor verdadeiro em uma das expressões. NÃO (NOT)– Inverte o resultado da operação, caso o resultado seja Verdadeiro ele passa ser falso e se for falso passa a ser verdadeiro. CONSTRUINDO EXPRESSÕES Quando se fala em expressões logo se lembra de matemática, e basicamente é isso mesmo, mas com uma diferença toda expressão feita em um algoritmo é linear. Na matemática temos colchetes chaves parentes frações e tudo mais, mas quando se fala de uma expressão em linguagem computacional só sobram os parênteses, falando assim e meio complicado de entender por e melhor trabalhar com exemplos. Tradicional (2/3 + (5-3) +1) Computacional 8 Modularização de Expressões Quando se fala em modularização de expressão é a mesma coisa que falar em dividir a expressão em partes, proporcionando a resolução da expressão. Como já foi falado na computação é utilizado somente parênteses, mas também pode ser utilizados parênteses dentro de parênteses. (2+2)/2=2 Neste exemplo a operação e feita assim 2+2 e depois se divide por dois resolve primeiro o que esta dentro do parênteses e depois o que esta fora. 2+2/2=3 Neste caso a operação e feita assim 2/2 e depois soma 2 + 1 que daria o resultado 3. Por este motivo a Modularização e muito importante, pois um pequeno erro muda todo o resultado final. Prioridades Na resolução das expressões aritméticas existe uma hierarquia para resolver. 1. Parênteses mais externos 2. Funções matemáticas 3. Operadores aritméticos 4. Operadores relacionais 5. Operadores lógicos Será mais fácil de entender isso trabalhando com a construção de algoritmos. Comandos de Entrada e Saída Comando de entrada serve para receber uma informação, enquanto comandos de saída servem para retirar a informação ou exibir. LER – comando de entrada serve para levar uma informação digitada para uma variável. ESCREVA OU ESCREVAL – Comando de saída que serve para exibir uma informação na tela. IMPRIMA – Comando de saída que serve para imprimir algo. Com estas informações já é possível começar a escrever algoritmos. PRIMEIROS ALGORITMOS Abra o Visual G, este programa e autoexecutável e só extrair e depois dar dois clicks no aplicativo ele aparecera esta tela. 9 Da linha 2 até a linha 6 temos comentários, comentários são partes do código que não serão compiladas. A linha 7 é onde começa o espaço para declaração das variáveis, não se pode declarar variáveis na linha 7 onde se encontra a palavra var A linha 11 e onde começa o algoritmo as instruções ordenadas. A linha 15 e onde termina o algoritmo, ou seja, nenhuma parte do algoritmo pode estar depois da palavra fimalgoritmo. O objetivo deste primeiro algoritmo e pegar dois números e depois soma-los, pensando nisso é hora começar a pensar na logica do algoritmo. Este é bem simples e pegar dois números e soma-lo, as variáveis podem ser do tipo inteiro ou real. Veja como o algoritmo fica. Algoritmo "semnome" // Disciplina : [Linguagem e Lógica de Programação] // Professor : tecbh.blogspot.com.br // Descrição : Aqui você descreve o que o programa faz! (função) // Autor(a) : Nome do(a) aluno(a) // Data atual : 24/02/2016 Var // Seção de Declarações das variáveis n1,n2:real 10 Inicio // Seção de Comandos, procedimento, funções, operadores, etc... leia(n1)//comando de entrada pra ler o valor digitado para 1º variavel leia(n2)//comando de entrada pra ler o valor digitado para 2º variavel escreval(n1+n2) Fimalgoritmo Para executar o programa aperte a tecla F9 ira aparecer uma tela do MS DOS 11 Digite o primeiro numero aperte enter, depois o segundo numero e aperte enter que terá o resultado da soma. Mas este simples algoritmo pode melhorar um pouco, adicione um escreval antes de cada leitura de variável. escreval(“Digite o primeiro numero”) leia(n1) escreval(“Digite o segundo numero”) leia(n2) O texto escrito entre “” significa que é do tipo caractere (string), e sempre que tiver um texto ele deve estar entre aspas. 12 Execute novamente o algoritmo e veja a diferença. 13 O próximo algoritmo será bem simples também, ele ira pegar 3 números e calcular a media entre os 3. Para calcular uma media em primeiro lugar devemos pegar os 3 valores e depois dividir esta soma por 3. Veja como ele ficara: Este algoritmo pode ser escrito de varias formas diferentes, como por exemplo, utilizando somente uma variável, ou retirando somente a variável resultado, ou ate mesmo deixando ela, mas fazendo parte final diferente. Agora veja o exemplo usando somente 2 variáveis. 14 Voltando a falar de logica, uma da principais funções da logica de programação e otimizar seu código de forma que ele seja escrito de forma mais limpa (menos código), neste caso usando uma estrutura de repetição o código fica mais enxuto. ESTRUTURAS CONDICIONAIS As estruturas condicionais são as utilizadas para tomadas de decisões, estas sãos as estruturas SE e a estrutura CASO. SE (IF) A sintaxe desta estrutura funciona da seguinte forma se <expressão-lógica> entao <seqüência-de-comandos> Fimse Sempre que expressão logica da estrutura for verdadeira a sequencia de comandos dentro da estrutura e executada, caso seja falsa e estrutura e ignorada, neste exemplo foi o utilizado o SE simples existe a opção do SE composto. 15 se <expressão-lógica> entao <seqüência-de-comandos> senão <seqüência-de-comandos> Fimse Nesta a regra é a mesma a única diferença é que quando a expressão logica for falsa será executada a sequencia de comandos dentro do senao, enquanto no exemplo anterior ele sai da estrutura. OBS: Dentro de estrutura e possível adicionar outras estruturas. Para os exemplos desta estrutura irei aproveitar o algoritmo feito anteriormente, imagine a situação. Um professor precisa saber a media do aluno nos 4 bimestres e se a media for maior ou igual a 70 o aluno está aprovado se for abaixo disso o aluno está reprovado. Exemplo SE: 16 Neste exemplo foi preciso criar duas estruturas para obter o resultado, este algoritmo pode ser simplificado utilizando o SE composto veja o exemplo. Exemplo SE SENAO (composto): Repare que foi utilizado duas linhas de comando a menos no algoritmo anterior, ou seja, já deu uma melhorada na logica. ESCOLHA CASO (SWITCH CASE) A estrutura CASE tem a mesma função que o SE, mudando o jeito de sua sintaxe. escolha <expressão-de-seleção> caso <exp11>, <exp12>, ..., <exp1n> <seqüência-de-comandos-1> caso <exp21>, <exp22>, ..., <exp2n> <seqüência-de-comandos-2> ... outrocaso <seqüência-de-comandos-extra> Fimescolha 17 Neste foi simplificado os exemplos anteriores não foi feito o calculo das notas, para simplificar o algoritmo, mas nos vídeos vou mostrar com os cálculos de notas. ESTRUTURAS DE REPETIÇÃO Estruturas de repetição são utilizadas para criação loop finito, ou seja, o bloco de comando (sequencia de comando), vai ser executado até que a condição seja satisfeita. Estrutura PARA FACA(FOR) Está estrutura repete uma sequencia de comandos um determinado numero de vezes, veja a sintaxe da estrutura. para <variável> de <valor-inicial> ate <valor-limite> [passo <incremento>] faca <seqüência-de-comandos> Fimpara 18 Ainda utilizando o exemplo de notas de aluno, foi criado um algoritmo que faz a soma das notas depois tira a media e retorna se o aluno foi aprovado ou não, na primeira vez que foi utilizado este mesmo exemplo, o algoritmo foi escrito com mais ou menos 30 linhas de código neste exemplo utilizando a estrutura de repetição, com isso foi utilizado mais ou menos 12 linhas de código, ou seja, otimizamos o código. OBS: Esta estrutura precisa ter uma variável de controle no exemplo foi utilizado a variável i, e ela deve ser do tipo inteiro. E caso o valor inicial seja maior que o valor final a estrutura não se executa, para que funcione com o valor inicial maior que final é preciso usar um PASSO -1, para ele decrementar. 19 Neste exemplo ele ira contar de 10 ate 1. Estrutura ENQUANTO FACA (WHILE) Está estrutura trabalha de forma que enquanto a expressão for verdadeira ela será executada. enquanto <expressão-lógica> faca <seqüência-de-comandos> fimenquanto 20 Este foi um exemplo bem simples só pra explicar como a estrutura funciona, e a diferença entre uma e outra neste caso o incremento da variável está sendo feito no final da sequencia de instruções, enquanto no para e feito direto na estrutura, outro detalhe importante é que foi preciso dar um valor inicial da variável de controle. VETOR E MATRIZ Voltando ao exemplo das notas de alunos imagine uma sala com 30 alunos e ter dar notas a todos eles, e ser exibido o nome de todos, para isso seria preciso 30 variáveis uma para cada nome, também tem as notas, ou seja, seria muitas variáveis. Neste caso usamos um vetor ou uma matriz. Vetor ou Matriz pode ser considerado como uma mesa com varias gavetas, assim é possível armazenar vários dados em um mesmo local de uma só vez, mas um vetor do tipo inteiro só pode armazenar dados deste tipo. Veja o exemplo. 1 2 3 4 5 6 7 8 9 10 Este é um exemplo de um vetor com 10 posições seria o mesmo que declarar dez variáveis, veja como declarar um vetor. 21 Neste caso foi declarado um vetor com 10 posições, ou seja, pode ser armazenado até dez nomes nele, para atribuir os valores em um vetor usamos uma estrutura de repetição. Matriz é a mesma coisa que o vetor, mas e mais parecido com uma tabela. 1,1 1,2 1,3 1,4 2,1 2,2 2,3 2,4 3,1 3,2 3,3 3,4 4,1 4,2 4,3 4,4 Está é uma matriz 4 por 4. 22 Na matriz temos colunas e linhas enquanto o vetor e somente linha, na tabela mostrada possui um números, que indicam sua posição. 1,1 linha 1 coluna 1 1,2 linha 1 coluna 2 2,4 linha 2 coluna 4 Sempre será linha e depois coluna. Declarando e preenchendo uma matriz Para fazer a leitura dos dados gravados na matriz e só fazer o mesmo código igual foi feito no vetor. Veja 23 Com isso chego ao final desta etapa, lembrando que esta apostila foi só uma introdução a logica de programação, os exercícios para treinar estes estudos estão disponíveis no blog. Caso tenha duvida ou critica ou sugestão e só entrar em contato através do e-mail, ou ate mesmo nos comentários do blog. Obrigado.
 
+PYTHON SENIOR DEVELOPER ATRIBUIÇÕES Desenvolver APIs com algoritmos de alta complexidade, deverá escrever códigos baseados em inteligência artificial, redes neurais (Machine Learning). REQUISITOS - Experiência com desenvolvimento Python (+5 anos) - Experiência com desenvolvimento de algoritmos voltados para Machine Learning - Experiência em desenvolvimento de API REST (Criação e consumo) e protocolos de segurança (Oauth 2.0). - Desejável - Experiência na plataforma GCP (Google Cloud Plataform) e AWS. - Conhecimento em desenvolvimento JAVA é um Plus - Experiência em estruturas e NOSQL. - Inglês nível intermediário/avançado, no mínimo escrita. SOBRE A EMPRESA O ZoOme é uma startup de video com 3 anos de desenvolvimento do produto e do negócio. Há poucos meses de seu lançamento, temos como parceiros/sócios grandes nomes como Ronaldinho Gaúcho, Whindersson Nunes, Grupo Bandeirantes, Grupo NZN, entre muitos outros já confirmados para o lançamento. Somos uma empresa inovadora, baseada em Miami, com sede de desenvolvimento no Brasil e representantes já estabelecidos em 4 continentes. Contato - Caio: finance@zoome.tv
+
 O número de publicações sobre grandes modelos de linguagem por ano, agrupadas por tipos de publicação Modelos de linguagem de grande escala Um grande modelo de linguagem (do inglês large language model - LLM) é um modelo computacional projetado para realizar tarefas de processamento de linguagem natural, especialmente a geração de linguagem, usando relações contextuais derivadas de um grande conjunto de dados de treinamento. Os LLMs podem gerar, resumir, traduzir e analisar texto em uma variedade de contextos, e são a base tecnológica dos chatbots modernos. Os LLMs podem imitar com precisão os padrões da linguagem natural porque são treinados em coleções de texto escrito por humanos. Pelo mesmo motivo, dados de treinamento enviesados ou imprecisos podem tornar a saída de um LLM menos confiável.
 Atualmente, os LLMs maiores e mais capazes baseiam-se em arquiteturas transformer, que podem ser mais eficientes e paralelizáveis do que os modelos estatísticos e de redes neurais recorrentes anteriores. A pesquisa em outras arquiteturas, como modelos de espaço de estados, está em andamento.
 Modelos como GPT, BERT e seus sucessores usaram esses avanços para demonstrar comportamentos emergentes em escala, como encontrar dados específicos de um grande conjunto de dados e raciocínio composicional.
@@ -355,4 +357,447 @@ Stanford AI Index. Consultado em 5 de maio de 2024 Frank, Michael C. (27 de junh
 doi:10.1038/s44159-023-00211-x (https://dx.doi.org/10.1038%2Fs44159-023-00211-x).
 Consultado em 2 de julho de 2023 Raschka, Sebastian (11 de março de 2026). «The Big LLM Architecture Comparison: From DeepSeek V3 to GLM-5: A Look At Modern LLM Architecture Design» (https://magazine.seb astianraschka.com/p/the-big-llm-architecture-comparison). Sebastian Raschka’s AI Magazine. Consultado em 25 de março de 2026 Obtida de "https://pt.wikipedia.org/w/index.php?title=Modelos_de_linguagem_de_grande_escala&oldid=72232255" Leitura complementar
 
-PYTHON SENIOR DEVELOPER ATRIBUIÇÕES Desenvolver APIs com algoritmos de alta complexidade, deverá escrever códigos baseados em inteligência artificial, redes neurais (Machine Learning). REQUISITOS - Experiência com desenvolvimento Python (+5 anos) - Experiência com desenvolvimento de algoritmos voltados para Machine Learning - Experiência em desenvolvimento de API REST (Criação e consumo) e protocolos de segurança (Oauth 2.0). - Desejável - Experiência na plataforma GCP (Google Cloud Plataform) e AWS. - Conhecimento em desenvolvimento JAVA é um Plus - Experiência em estruturas e NOSQL. - Inglês nível intermediário/avançado, no mínimo escrita. SOBRE A EMPRESA O ZoOme é uma startup de video com 3 anos de desenvolvimento do produto e do negócio. Há poucos meses de seu lançamento, temos como parceiros/sócios grandes nomes como Ronaldinho Gaúcho, Whindersson Nunes, Grupo Bandeirantes, Grupo NZN, entre muitos outros já confirmados para o lançamento. Somos uma empresa inovadora, baseada em Miami, com sede de desenvolvimento no Brasil e representantes já estabelecidos em 4 continentes. Contato - Caio: finance@zoome.tv
+Traduzido do Chinês Por Vitória Menezes Publicado por BAIXELIVROS.COM.BR 2026 O TRATADO MILITAR MAIS ANTIGO DO MUNDO Este material foi enviado e devidamente autorizado pelo responsável legal, autorizando sua disponibilização gratuita e integral por meio da plataforma BaixeLivros.
+Caso deseje compartilhá-lo fora deste ambiente, é necessário obter a devida permissão.
+Além disso, a licença gratuita concedida para este material poderá ser alterada futuramente a critério do autor.
+Reforçamos o compromisso com a ética e a valorização do trabalho dos autores, tradutores e editores, oferecendo acesso responsável à leitura.
+Para ler este e outros títulos, acesse: www.baixelivros.com.br A ARTE DA GUERRA I:
+Planejamento Estratégico  II:
+Conduzindo a Guerra  III:
+Ataque por Estratégia
+
+IV:
+Disposições Tática  V:
+Energia  VI:
+Pontos Fracos e Fortes " VII: Manobras  VIII: Variação de Táticas &' IX:
+O Exército em Marcha && X:
+Terreno (' XI:
+As Nove Situações (* XII:
+O Ataque pelo Fogo * XIII: O Uso de Espiões " SUMÁRIO I Planejamento Estratégico 1. Sun Tzu disse: A arte da guerra é de importância vital para o Estado.
+2. É uma questão de vida ou morte, um caminho que pode levar à segurança ou à ruína. Por isso, é um tema que, de forma alguma, pode ser negligenciado.
+3. A arte da guerra, portanto, é guiada por cinco fatores constantes, que devem ser considerados ao se analisar as condições no campo de batalha.
+4. São eles:
+ 1 5–6. A Lei Moral faz com que o povo esteja em total harmonia com seu governante, de modo que o seguirá independentemente do risco à própria vida, sem se deixar abalar por qualquer perigo.
+7. O Céu representa noite e dia, frio e calor, tempo e estações.
+(1) A Lei Moral;
+(2) O Céu;
+(3) A Terra;
+(4) O Comandante;
+(5) Método e disciplina.
+8. A Terra compreende distâncias, grandes e pequenas; perigo e segurança; terreno aberto e passagens estreitas; as possibilidades de vida e de morte.
+9. O Comandante representa as virtudes de sabedoria, sinceridade, benevolência, coragem e rigor.
+10. Por método e disciplina, entende-se a organização do exército em suas devidas subdivisões, a hierarquia entre os oficiais, a manutenção das rotas pelas quais os suprimentos chegam ao exército e o controle dos gastos militares.
+11. Esses cinco aspectos devem ser conhecidos por todo general: aquele que os compreende alcançará a vitória; aquele que não os compreende fracassará.
+12. Portanto, em suas deliberações, ao buscar comparação, da seguinte forma: — as condições militares, use-os como base de (2) Qual dos dois generais possui maior capacidade?
+(3) De qual lado estão as vantagens provenientes do Céu e da Terra?
+(4) Em qual lado a disciplina é aplicada com maior rigor?
+(5) Qual exército é mais forte?
+2 13.(1) Qual dos dois soberanos está mais alinhado à Lei Moral?
+3 (6) De qual lado oficiais e soldados são mais bem treinados?
+(7) Em qual exército há maior constância tanto nas recompensas quanto nas punições?
+14. Com base nessas sete considerações, posso prever vitória ou derrota.
+15. O general que ouve meus conselhos e os coloca em prática vencerá: que ele seja mantido no comando! O general que não os ouve nem os aplica sofrerá derrota: que seja dispensado!
+16. Ao seguir os benefícios de meus conselhos, aproveite também quaisquer circunstâncias favoráveis que vão além das regras comuns.
+17. De acordo com as circunstâncias, deve-se adaptar os planos.
+18. Toda guerra se baseia no engano.
+19. Assim, quando formos capazes de atacar, devemos parecer incapazes; ao empregar nossas forças, devemos parecer inativos; quando estivermos perto, devemos fazer o inimigo acreditar que estamos longe; quando estivermos longe, devemos fazê-lo acreditar que estamos perto.
+20. Ofereça iscas para atrair o inimigo. Finja desordem e destrua-o.
+21. Se ele estiver seguro em todos os pontos, esteja preparado para enfrentá-lo. Se estiver em força superior, evite-o.
+22. Se o seu oponente tiver um temperamento colérico, procure irritá-lo. Finja fraqueza, para que ele se torne arrogante.
+23. Se ele estiver à vontade, não lhe dê descanso. Se suas forças estiverem unidas, separe-as.
+24. Ataque-o onde ele não estiver preparado; apareça onde não for esperado.
+25. Essas estratégias militares, que conduzem à vitória, não devem ser divulgadas antecipadamente.
+26. O general que vence uma batalha faz muitos cálculos em seu templo antes que ela seja travada. O general que perde faz poucos cálculos previamente. Assim, muitos cálculos levam à vitória, e poucos levam à derrota — quanto mais a ausência total de cálculos! É pela atenção a esse ponto que posso prever quem tem mais chances de vencer ou perder.
+4 II Conduzindo a Guerra 1. Sun Tzu disse: Nas operações de guerra, quando há em campo mil carros leves, mil carros pesados e cem mil soldados protegidos por armaduras, com provisões suficientes para percorrer mil li, os gastos tanto no interior quanto na frente — incluindo a recepção de convidados, itens menores como cola e tinta, e os custos com carros e armamentos — chegam ao total de mil onças de prata por dia. Esse é o custo de mobilizar um exército de 100.000 homens.
+2. Quando você entra em combate, se a vitória demora a chegar, as armas dos soldados se desgastam e seu ânimo se enfraquece. Se você sitiar uma cidade, esgotará suas forças.
+3. Além disso, se a campanha se prolonga, os recursos do Estado não suportarão a pressão.
+4. Quando suas armas estiverem desgastadas, seu ânimo abatido, suas forças esgotadas e seus recursos consumidos, outros líderes se levantarão para tirar proveito da sua fraqueza. Então, ninguém — por mais sábio que seja — conseguirá evitar as consequências que se seguirão.
+5.Assim, embora já se tenha ouvido falar de pressa imprudente na guerra, nunca se viu habilidade associada a longas demoras.
+5 6. Não há registro de um país que tenha se beneficiado de guerras prolongadas.
+7. Apenas quem conhece profundamente os males da guerra pode compreender plenamente a maneira vantajosa de conduzi-la.
+8. O soldado habilidoso não convoca um segundo recrutamento, nem carrega seus comboios de suprimentos mais de duas vezes.
+9. Leve o material de guerra de casa, mas obtenha mantimentos do inimigo. Assim, o exército terá alimento suficiente para suas necessidades.
+10. A pobreza do tesouro do Estado faz com que o exército seja mantido por contribuições vindas de longe. Sustentar um exército à distância leva o povo ao empobrecimento.
+11. Por outro lado, a proximidade de um exército faz os preços subirem; e preços altos fazem com que os recursos do povo se esgotem.
+12. Quando seus recursos se esgotam, os camponeses passam a sofrer com pesadas cobranças.
+13,14. Com essa perda de recursos e o esgotamento das forças, os lares do povo ficam desprovidos, e três décimos de sua renda se dissipam; enquanto as despesas do governo com carros danificados, cavalos exaustos, couraças e elmos, arcos e flechas, 6 7 lanças e escudos, mantos de proteção, bois de tração e carroças pesadas, chegarão a quatro décimos da receita total do Estado.
+15. Por isso, um general sábio faz questão de obter suprimentos do inimigo. Uma carroça de provisões do inimigo equivale a vinte das suas próprias, e da mesma forma um único picul de forragem dele equivale a vinte do seu próprio estoque.
+16. Para matar o inimigo, nossos homens devem ser incitados à fúria; para que haja vantagem na derrota do inimigo, eles devem receber recompensas.
+17. Portanto, em combates com carros, quando dez ou mais forem capturados, devem ser recompensados aqueles que capturaram os primeiros. Nossas próprias bandeiras devem substituir as do inimigo, e os carros capturados devem ser misturados e utilizados junto aos nossos. Os soldados capturados devem ser tratados com bondade e mantidos.
+18. Isso se chama usar o inimigo conquistado para aumentar a própria força.
+19. Assim, na guerra, o objetivo principal deve ser a vitória, e não campanhas prolongadas.
+20. Desse modo, pode-se compreender que o comandante dos exércitos é o árbitro do destino do povo, aquele de quem depende se a nação estará em paz ou em perigo.
+III 1. Sun Tzu disse: Na prática da guerra, o melhor de tudo é tomar o território inimigo inteiro e intacto; destruí-lo não é tão bom. Da mesma forma, é melhor capturar um exército inteiro do que destruí-lo; capturar um regimento, um destacamento ou uma companhia inteira do que aniquilá-los.
+2. Portanto, lutar e vencer todas as batalhas não é a excelência suprema; a excelência suprema consiste em quebrar a resistência do inimigo sem lutar.
+3. Assim, a forma mais elevada de comando é frustrar os planos do inimigo; a seguinte é impedir a junção de suas forças; depois vem atacar seu exército em campo; e a pior política de todas é sitiar cidades muradas.
+4. A regra é: não sitiar cidades muradas se isso puder ser evitado. A preparação de escudos móveis, abrigos e diversos instrumentos de guerra levará três meses inteiros; e a construção de rampas contra as muralhas levará mais três meses.
+5. O general, incapaz de controlar sua irritação, lançará seus homens ao ataque como formigas em enxame, com o resultado de que um terço de seus soldados será morto, enquanto a cidade ainda 8 Ataque por Estratégia 9 permanece intocada. Tais são os efeitos desastrosos de um cerco.
+6. Portanto, o líder habilidoso subjuga as tropas inimigas sem lutar; captura suas cidades sem sitiá-las; derruba seu reino sem operações prolongadas em campo.
+7. Mantendo suas forças intactas, ele disputa o domínio do império e, assim, sem perder um único homem, sua vitória será completa. Esse é o método de atacar por estratégia.
+8. A regra na guerra é: se nossas forças são dez para um, devemos cercar o inimigo; se cinco para um, devemos atacá-lo; se o dobro, devemos dividir nossas forças em duas.
+9. Se estivermos em igualdade de forças, podemos oferecer batalha; se estivermos ligeiramente em desvantagem numérica, podemos evitar o inimigo; se estivermos em grande desvantagem, devemos recuar.
+10. Assim, embora uma pequena força possa travar uma luta obstinada, no fim ela será capturada por uma força maior.
+11. O general é o baluarte do Estado; se esse baluarte for sólido em todos os aspectos, o Estado será forte; se for falho, o Estado será fraco.
+12. Há três maneiras pelas quais um governante pode trazer infortúnio ao seu exército:
+13. (1) Ao ordenar que o exército avance ou recue, ignorando o fato de que ele não pode obedecer. Isso se chama paralisar o exército.
+14. (2) Ao tentar governar um exército da mesma forma que administra um reino, ignorando as condições próprias da vida militar. Isso causa inquietação na mente dos soldados.
+15. (3) Ao empregar os oficiais sem critério, por ignorar o princípio militar de adaptação às circunstâncias. Isso abala a confiança dos soldados.
+16. Quando o exército está inquieto e desconfiado, problemas certamente surgirão por parte de outros príncipes feudais. Isso nada mais é do que levar a anarquia ao exército e jogar fora a vitória.
+10 17. Assim, podemos saber que há cinco fatores essenciais para a vitória:
+(1) Vencerá aquele que sabe quando lutar e quando não lutar.
+(2) Vencerá aquele que sabe lidar tanto com forças superiores quanto inferiores.
+(3) Vencerá aquele cujo exército é animado pelo mesmo espírito em todas as suas fileiras.
+11 (4) Vencerá aquele que, estando preparado, espera para apanhar o inimigo desprevenido.
+(5) Vencerá aquele que possui capacidade militar e não sofre interferência do soberano.
+18. Assim, diz-se: se você conhece o inimigo e conhece a si mesmo, não precisa temer o resultado de cem batalhas. Se conhece a si mesmo, mas não o inimigo, para cada vitória conquistada também sofrerá uma derrota. Se não conhece nem o inimigo nem a si mesmo, sucumbirá em todas as batalhas.
+IV 1. Sun Tzu disse: Os bons guerreiros da antiguidade primeiro se colocavam fora da possibilidade de derrota e, então, aguardavam a oportunidade de derrotar o inimigo.
+2. Garantir-se contra a derrota está em nossas próprias mãos, mas a oportunidade de derrotar o inimigo é fornecida por ele mesmo.
+3. Assim, o bom combatente é capaz de se proteger contra a derrota, mas não pode garantir a derrota do inimigo.
+4. Daí o ditado: pode-se saber como conquistar sem necessariamente conseguir fazê-lo.
+5. A segurança contra a derrota implica táticas defensivas; a capacidade de derrotar o inimigo significa adotar a ofensiva.
+6. Permanecer na defensiva indica força insuficiente; atacar indica abundância de força.
+7. O general habilidoso na defesa se oculta nas profundezas mais secretas da terra; aquele habilidoso no ataque surge das maiores alturas do céu. Assim, de um lado temos a capacidade de nos proteger; de outro, uma vitória completa.
+12 Disposições Táticas 8. Ver a vitória apenas quando ela é evidente para o senso comum não é o auge da excelência.
+9. Tampouco é excelência suprema lutar, vencer e ouvir todo o império dizer: “Muito bem!”.
+10. Levantar um fio de cabelo de outono não é sinal de grande força; enxergar o sol e a lua não é sinal de visão aguçada; ouvir o trovão não é sinal de audição apurada.
+11. O que os antigos chamavam de lutador habilidoso é aquele que não apenas vence, mas se destaca por vencer com facilidade.
+12. Por isso, suas vitórias não lhe trazem fama de sabedoria nem mérito especial de coragem.
+13. Ele vence suas batalhas não cometendo erros. Não cometer erros é o que garante a vitória, pois significa derrotar um inimigo que já está vencido.
+14. Assim, o combatente habilidoso se coloca em uma posição que torna a derrota impossível e não perde o momento de derrotar o inimigo.
+15. Desse modo, na guerra, o estrategista vitorioso só busca a batalha depois que a vitória já foi assegurada; enquanto aquele destinado à derrota primeiro luta e depois procura a vitória.
+13 16. O líder consumado cultiva a Lei Moral e adere rigorosamente ao método e à disciplina; assim, está em seu poder controlar o sucesso.
+17. No que diz respeito ao método militar, temos, primeiro, a Medição; segundo, a Estimativa de quantidade; terceiro, o Cálculo; quarto, o Balanceamento das probabilidades; e quinto, a Vitória.
+18. A Medição tem origem na Terra; a Estimativa de quantidade deriva da Medição; o Cálculo deriva da Estimativa de quantidade; o Balanceamento das probabilidades deriva do Cálculo; e a Vitória decorre do Balanceamento das probabilidades.
+19. Um exército vitorioso em confronto com um derrotado é como um peso de uma libra colocado na balança contra um único grão.
+20. O ímpeto de uma força conquistadora é como o rompimento de águas represadas que desabam em um abismo de mil braças de profundidade.
+14 V Energia 1. Sun Tzu disse: O controle de uma grande força segue o mesmo princípio que o de poucos homens: é apenas uma questão de dividir adequadamente seus números.
+2. Lutar com um grande exército sob seu comando não é diferente de lutar com um pequeno: trata-se apenas de estabelecer sinais e comunicações.
+3. Garantir que todo o seu exército suporte o impacto do ataque inimigo e permaneça firme — isso é alcançado por meio de manobras diretas e indiretas.
+4. Fazer com que o impacto do seu exército seja como uma mó esmagando um ovo — isso é alcançado pelo conhecimento dos pontos fracos e fortes.
+5. Em todo combate, o método direto pode ser usado para iniciar a batalha, mas métodos indiretos são necessários para assegurar a vitória.
+6. As táticas indiretas, aplicadas com eficiência, são inesgotáveis como o Céu e a Terra, intermináveis como o fluxo de rios e riachos; como o sol e a lua, terminam apenas para recomeçar; como as quatro estações, passam para retornar novamente.
+15 7. Não há mais do que cinco notas musicais, mas as combinações dessas cinco dão origem a mais melodias do que se pode ouvir.
+8. Não há mais do que cinco cores primárias (azul, amarelo, vermelho, branco e preto), mas, em combinação, produzem mais tonalidades do que se pode ver.
+9. Não há mais do que cinco sabores fundamentais (azedo, picante, salgado, doce e amargo), mas suas combinações geram mais sabores do que se pode provar.
+10. Na batalha, não há mais do que dois métodos de ataque — o direto e o indireto; ainda assim, a combinação desses dois dá origem a uma série infinita de manobras.
+11. O direto e o indireto se sucedem continuamente. É como mover-se em um círculo — nunca se chega ao fim. Quem pode esgotar as possibilidades de suas combinações?
+12. O avanço das tropas é como a força de uma torrente que pode até arrastar pedras em seu curso.
+13. A qualidade da decisão é como o ataque preciso de um falcão, que lhe permite atingir e destruir sua presa.
+14. Portanto, o bom combatente será avassalador no ataque e ágil na decisão.
+16 15. A energia pode ser comparada ao tensionar de uma besta; a decisão, ao disparo do gatilho.
+16. Em meio ao tumulto da batalha, pode parecer haver desordem, mas sem que exista desordem real; em meio à confusão e ao caos, sua formação pode parecer sem forma definida, mas ainda assim será imune à derrota.
+17. Simular desordem pressupõe disciplina perfeita; simular medo pressupõe coragem; simular fraqueza pressupõe força.
+18. Ocultar a ordem sob a aparência de desordem é apenas uma questão de organização; esconder a coragem sob a aparência de timidez pressupõe uma reserva de energia latente; mascarar a força com fraqueza é feito por meio de disposições táticas.
+19. Assim, quem é habilidoso em manter o inimigo em movimento cria aparências enganosas às quais o inimigo reage. Ele sacrifica algo para que o inimigo se apodere disso.
+20. Ao oferecer iscas, mantém o inimigo em marcha; então, com um grupo selecionado de homens, fica à espreita.
+21. O combatente inteligente busca o efeito da energia combinada e não exige demais dos indivíduos. Por isso, sabe escolher as pessoas certas e aproveitar a força coletiva.
+17 22. Quando ele utiliza a energia combinada, seus combatentes tornam-se como troncos ou pedras em movimento. Pois é da natureza de um tronco ou de uma pedra permanecer imóvel em terreno plano e mover-se quando está em uma inclinação; se tiver forma quadrada, ficará parado, mas, se for arredondado, rolará ladeira abaixo.
+23. Assim, a energia desenvolvida por bons combatentes é como o impulso de uma pedra arredondada rolando de uma montanha com milhares de metros de altura. É isso quanto ao tema da energia.
+18 VI 1. Sun Tzu disse: Quem chega primeiro ao campo de batalha e aguarda a chegada do inimigo estará descansado para o combate; quem chega depois e precisa se apressar para lutar chegará exausto.
+2. Portanto, o combatente inteligente impõe sua vontade ao inimigo, mas não permite que a vontade do inimigo seja imposta a ele.
+3. Ao oferecer vantagens, ele pode fazer com que o inimigo se aproxime por vontade própria; ou, ao causar dano, pode tornar impossível que o inimigo se aproxime.
+4. Se o inimigo estiver descansando, pode-se perturbá-lo; se estiver bem abastecido, pode-se fazê-lo passar fome; se estiver acampado tranquilamente, pode-se forçá-lo a se mover.
+5. Apareça em pontos que o inimigo seja obrigado a defender; avance rapidamente para lugares onde não é esperado.
+6. Um exército pode marchar grandes distâncias sem se desgastar, se atravessar territórios onde o inimigo não esteja presente.
+7. Você pode ter certeza de obter sucesso em seus ataques se atacar apenas lugares que não estão defendidos. Você pode 19 Pontos Fracos e Fortes 20 garantir a segurança de sua defesa se mantiver apenas posições que não possam ser atacadas.
+8. Assim, é habilidoso no ataque o general cujo oponente não sabe o que defender; e é habilidoso na defesa aquele cujo oponente não sabe o que atacar.
+9. Ó arte divina da sutileza e do segredo! Por meio dela aprendemos a ser invisíveis, inaudíveis; e, assim, podemos ter o destino do inimigo em nossas mãos.
+10. Você pode avançar e ser absolutamente irresistível se atacar os pontos fracos do inimigo; pode recuar e estar a salvo da perseguição se seus movimentos forem mais rápidos que os do inimigo.
+11. Se quisermos lutar, podemos forçar o inimigo ao combate, mesmo que ele esteja protegido por altas muralhas e fossos profundos. Basta atacar algum outro ponto que ele será obrigado a socorrer.
+12. Se não quisermos lutar, podemos impedir que o inimigo nos enfrente, mesmo que as linhas de nosso acampamento sejam apenas traçadas no chão. Basta criar algo inesperado e incompreensível em seu caminho.
+13. Ao descobrir as disposições do inimigo e permanecer invisíveis, podemos manter nossas forças concentradas, enquanto as do inimigo precisam se dividir.
+14. Podemos formar um único corpo unido, enquanto o inimigo precisa se dividir em partes. Assim, teremos um todo contra frações de um todo, o que significa que seremos muitos contra poucos.
+15. E, se formos capazes de atacar uma força inferior com uma superior, nossos oponentes estarão em grande dificuldade.
+16. O local onde pretendemos lutar não deve ser revelado; pois, assim, o inimigo terá de se preparar contra possíveis ataques em vários pontos diferentes. Com suas forças distribuídas em muitas direções, o número de soldados que enfrentaremos em qualquer ponto será proporcionalmente menor.
+17. Pois, se o inimigo reforçar sua vanguarda, enfraquecerá a retaguarda; se reforçar a retaguarda, enfraquecerá a vanguarda; se reforçar a esquerda, enfraquecerá a direita; se reforçar a direita, enfraquecerá a esquerda. Se enviar reforços para todos os lados, será fraco em todos eles.
+18. A fraqueza numérica surge da necessidade de se preparar contra possíveis ataques; a força numérica surge de obrigar o adversário a fazer essas preparações contra nós.
+19. Conhecendo o local e o momento da batalha, podemos concentrar nossas forças, mesmo a partir de grandes distâncias, para lutar.
+21 20. Mas, se nem o tempo nem o lugar forem conhecidos, então a ala esquerda será incapaz de socorrer a direita, e a direita igualmente incapaz de socorrer a esquerda; a vanguarda não poderá apoiar a retaguarda, nem a retaguarda sustentar a vanguarda. Quanto mais quando as partes mais distantes do exército estiverem separadas por menos de cem li, e até mesmo as mais próximas por vários li!
+21. Embora, segundo minha estimativa, os soldados de Yueh superem os nossos em número, isso de nada lhes adiantará em termos de vitória. Digo, portanto, que a vitória pode ser alcançada.
+22. Ainda que o inimigo seja numericamente superior, podemos impedi-lo de lutar. Planeje de modo a descobrir seus planos e a probabilidade de sucesso deles.
+23. Provogue-o e descubra o princípio de sua atividade ou inatividade. Force-o a se revelar, para identificar seus pontos vulneráveis.
+24. Compare cuidadosamente o exército inimigo com o seu, para saber onde há excesso de força e onde há deficiência.
+25. Ao fazer suas disposições táticas, o mais alto nível que você pode alcançar é ocultá-las; oculte suas disposições, e estará a salvo da observação dos espiões mais astutos e das maquinações das mentes mais brilhantes.
+22 26. Como a vitória pode ser produzida a partir das próprias táticas do inimigo — isso é algo que a maioria não consegue compreender.
+27. Todos conseguem ver as táticas pelas quais venço, mas ninguém consegue ver a estratégia da qual a vitória se origina.
+28. Não repita as táticas que lhe trouxeram uma vitória; em vez disso, deixe que seus métodos sejam guiados pela infinita variedade das circunstâncias.
+29. As táticas militares são como a água: em seu curso natural, ela evita os lugares altos e corre para baixo.
+30. Assim, na guerra, o caminho é evitar o que é forte e atacar o que é fraco.
+31. A água molda seu curso de acordo com o terreno por onde flui; o soldado constrói sua vitória em relação ao inimigo que enfrenta.
+32. Portanto, assim como a água não tem forma constante, também na guerra não há condições fixas.
+33. Aquele que consegue adaptar suas táticas em relação ao oponente e, com isso, alcançar a vitória, pode ser chamado de um comandante inspirado pelos céus.
+23 34. Os cinco elementos (água, fogo, madeira, metal e terra) nem sempre predominam igualmente; as quatro estações se sucedem umas às outras. Há dias curtos e dias longos; a lua tem seus períodos de minguante e crescente.
+24 VII Manobras 1. Sun Tzu disse: Na guerra, o general recebe suas ordens do soberano.
+2. Após reunir um exército e concentrar suas forças, ele deve combinar e harmonizar seus diferentes elementos antes de estabelecer o acampamento.
+3. Depois disso vem a manobra tática, e nada é mais difícil do que ela. A dificuldade da manobra tática consiste em transformar o indireto em direto e o infortúnio em vantagem.
+4. Assim, tomar um caminho longo e indireto, depois de atrair o inimigo para fora do caminho, e, mesmo partindo depois dele, conseguir chegar ao objetivo antes, demonstra conhecimento da arte do desvio.
+5. Manobrar com um exército é vantajoso; com uma multidão indisciplinada, é extremamente perigoso.
+6. Se você colocar um exército totalmente equipado em marcha para obter uma vantagem, é provável que chegue tarde demais. Por outro lado, destacar uma força leve e rápida para esse fim implica sacrificar sua bagagem e suprimentos.
+25 7. Assim, se você ordenar que seus homens enrolem suas couraças e façam marchas forçadas sem parar, dia e noite, percorrendo o dobro da distância habitual, cobrindo cem li para obter uma vantagem, os líderes das suas três divisões cairão nas mãos do inimigo.
+8. Os mais fortes estarão na frente, os exaustos ficarão para trás, e, desse modo, apenas um décimo do seu exército chegará ao destino.
+9. Se você marchar cinquenta li para manobrar contra o inimigo, perderá o comandante da primeira divisão, e apenas metade da força chegará ao objetivo.
+10. Se marchar trinta li com o mesmo propósito, dois terços do exército chegarão.
+11. Podemos concluir, então, que um exército sem seu comboio de bagagens está perdido; sem provisões, está perdido; sem bases de suprimento, está perdido.
+12. Não podemos firmar alianças antes de conhecer os planos de nossos vizinhos.
+13. Não estamos aptos a liderar um exército em marcha se não estivermos familiarizados com o terreno — suas montanhas e florestas, armadilhas e precipícios, pântanos e áreas alagadas.
+26 14. Não conseguiremos aproveitar as vantagens naturais se não fizermos uso de guias locais.
+15. Na guerra, pratique a dissimulação, e você terá sucesso.
+16. Se deve concentrar ou dividir suas tropas deve ser decidido de acordo com as circunstâncias.
+17. Que sua rapidez seja como a do vento, sua coesão como a da floresta.
+18. Ao saquear, seja como o fogo; na imobilidade, seja como uma montanha.
+19. Que seus planos sejam obscuros e impenetráveis como a noite e, ao agir, ataque como um raio.
+20. Ao saquear uma região, distribua os despojos entre seus homens; ao conquistar novo território, divida-o em partes para beneficiar os soldados.
+21. Reflita e delibere antes de agir.
+22. Vencerá aquele que aprendeu a arte do desvio. Essa é a arte da manobra.
+23. O Livro da Administração do Exército diz: no campo de batalha, a palavra falada não alcança longe o suficiente; por isso, instituem-se gongos e tambores. 27 28 Tampouco objetos comuns não podem ser vistos com clareza suficiente; por isso, utilizam-se bandeiras e estandartes.
+24. Gongos e tambores, bandeiras e estandartes são meios pelos quais os ouvidos e os olhos do exército podem ser direcionados para um único ponto.
+25. Assim, o exército forma um único corpo unido, tornando impossível que os corajosos avancem sozinhos ou que os covardes recuem por conta própria. Essa é a arte de comandar grandes massas de homens.
+26. Portanto, em combates noturnos, utilize amplamente fogueiras de sinalização e tambores; e, em combates diurnos, bandeiras e estandartes, como forma de influenciar os ouvidos e os olhos do exército.
+27. Um exército inteiro pode ser privado de seu espírito; um comandante-chefe pode perder sua presença de espírito.
+28. O ânimo do soldado é mais intenso pela manhã; ao meio-dia começa a diminuir; e, à noite, sua mente está voltada apenas para retornar ao acampamento.
+29. Um general habilidoso, portanto, evita enfrentar um exército quando seu ânimo está elevado, mas o ataca quando está abatido e inclinado a recuar. Essa é a arte de estudar o moral das tropas.
+30. Permanecer disciplinado e calmo, aguardando o surgimento de desordem e tumulto no inimigo — essa é a arte de manter o autocontrole.
+31. Estar perto do objetivo enquanto o inimigo ainda está longe, descansar enquanto ele se desgasta, estar bem alimentado enquanto ele passa fome — essa é a arte de preservar as próprias forças.
+32. Evitar interceptar um inimigo cujas bandeiras estão em perfeita ordem, evitar atacar um exército organizado e confiante — essa é a arte de avaliar as circunstâncias.
+33. É um princípio militar não avançar morro acima contra o inimigo, nem enfrentá-lo quando ele desce.
+34. Não persiga um inimigo que finge fugir; não ataque soldados cujo ânimo está elevado.
+35. Não caia nas iscas oferecidas pelo inimigo. Não interfira em um exército que está retornando para casa.
+36. Quando cercar um exército, deixe uma saída livre. Não pressione demais um inimigo desesperado.
+37. Essa é a arte da guerra.
+29 VIII 1. Sun Tzu disse: Na guerra, o general recebe suas ordens do soberano, reúne seu exército e concentra suas forças.
+2. Em terreno difícil, não acampe. Em regiões onde grandes rotas se cruzam, una-se aos aliados. Não permaneça em posições perigosamente isoladas. Em situações de cerco, recorra à estratégia. Em posições desesperadoras, lute.
+3. Há caminhos que não devem ser seguidos, exércitos que não devem ser atacados, cidades que não devem ser sitiadas, posições que não devem ser disputadas e ordens do soberano que não devem ser obedecidas.
+4. O general que compreende plenamente as vantagens da variação tática sabe como conduzir suas tropas.
+5. O general que não compreende isso, mesmo conhecendo bem o terreno, não será capaz de transformar esse conhecimento em vantagem prática.
+30 Variação de Táticas 6. Assim, o estudioso da guerra que não domina a arte de variar seus planos, mesmo conhecendo as Cinco Vantagens, não saberá fazer o melhor uso de seus homens.
+7. Portanto, nos planos de um líder sábio, as considerações de vantagem e desvantagem devem ser combinadas.
+8. Se nossa expectativa de vantagem for moderada dessa forma, poderemos alcançar a parte essencial de nossos objetivos.
+9. Se, por outro lado, em meio às dificuldades estivermos sempre prontos para aproveitar uma oportunidade, poderemos nos livrar do infortúnio.
+10. Submeta os líderes inimigos causando-lhes danos; crie problemas para eles e mantenha-os constantemente ocupados; ofereça vantagens aparentes e faça com que se precipitem para pontos específicos.
+11. A arte da guerra nos ensina a não confiar na probabilidade de o inimigo não vir, mas em nossa própria prontidão para recebê-lo; não na chance de ele não atacar, mas no fato de termos tornado nossa posição inexpugnável.
+12. Há cinco falhas perigosas que podem afetar um general:
+31 (1) Imprudência, que leva à destruição;
+(2) Covardia, que leva à captura;
+(3) Temperamento impulsivo, que pode ser provocado por insultos;
+(4) Excesso de apego à honra, sensível à vergonha;
+(5) Preocupação excessiva com seus homens, que o expõe a ansiedade e dificuldades.
+13. Esses são os cinco vícios que mais acometem um general, e que são desastrosos para a condução da guerra.
+14. Quando um exército é derrotado e seu líder morto, a causa certamente estará entre essas cinco falhas perigosas. Que elas sejam motivo de reflexão.
+32 IX 1. Sun Tzu disse: Chegamos agora à questão de acampar o exército e observar os sinais do inimigo. Atravesse rapidamente as montanhas e mantenha-se próximo aos vales.
+2. Acampe em lugares elevados, voltados para o sol. Não suba alturas para lutar. Isso é tudo quanto à guerra em terreno montanhoso.
+3. Após atravessar um rio, afaste-se dele o mais rápido possível.
+4. Quando uma força invasora cruza um rio em marcha, não avance para enfrentá-la no meio da travessia. O melhor é deixar que metade do exército atravesse e então atacar.
+5. Se você deseja lutar, não vá ao encontro do invasor próximo ao rio que ele precisa atravessar.
+6. Posicione suas embarcações a montante do inimigo e voltadas para o sol. Não avance rio acima para enfrentá-lo. Isso é tudo quanto à guerra em rios.
+7. Ao atravessar pântanos salinos, sua única preocupação deve ser atravessá-los rapidamente, sem demora.
+33 O Exército em Marcha 8. Se for forçado a lutar em um pântano salino, deve ter água e pasto próximos e manter as costas protegidas por um grupo de árvores. Isso é tudo quanto às operações em pântanos salinos.
+9. Em terreno seco e plano, ocupe uma posição de fácil acesso, com elevação à direita e na retaguarda, de modo que o perigo esteja à frente e a segurança atrás. Isso é tudo quanto às operações em terreno plano.
+10. Esses são os quatro ramos úteis do conhecimento militar que permitiram ao Imperador Amarelo derrotar quatro soberanos distintos.
+11. Todos os exércitos preferem terreno elevado ao baixo e locais ensolarados aos sombrios.
+12. Se você cuidar bem de seus homens e acampar em terreno firme, o exército ficará livre de doenças, e isso levará à vitória.
+13. Ao chegar a uma colina ou margem elevada, ocupe o lado voltado para o sol, com a inclinação à sua direita e retaguarda. Assim, você beneficiará seus soldados e aproveitará as vantagens naturais do terreno.
+14. Quando, devido a fortes chuvas a montante, um rio que você deseja atravessar estiver cheio e espumoso, deve esperar até que o nível baixe.
+34 15. Terrenos com penhascos íngremes e torrentes entre eles, depressões profundas, locais confinados, vegetação densa, pântanos traiçoeiros e fendas devem ser evitados com a maior rapidez possível.
+16. Enquanto evitamos tais lugares, devemos fazer com que o inimigo se aproxime deles; e, quando os enfrentamos, devemos permitir que o inimigo os tenha às costas.
+17. Se nas proximidades do seu acampamento houver terrenos elevados, lagoas cercadas por vegetação aquática, depressões cheias de juncos ou bosques com vegetação densa, esses locais devem ser cuidadosamente inspecionados e vasculhados; pois são lugares onde emboscadas ou espiões podem estar escondidos.
+18. Quando o inimigo está próximo e permanece quieto, é porque confia na força natural de sua posição.
+19. Quando ele se mantém afastado e tenta provocar batalha, é porque deseja que o outro lado avance.
+20. Se o local onde ele acampa é de fácil acesso, ele está oferecendo uma isca.
+21. Movimentos entre as árvores de uma floresta indicam que o inimigo está avançando. O aparecimento de vários disfarces no meio da vegetação densa significa que o inimigo quer nos deixar desconfiados.
+35 22. O levantar repentino de aves em voo é sinal de emboscada. Animais assustados indicam que um ataque súbito está por vir.
+23. Quando há poeira subindo em uma coluna alta, é sinal de carros avançando; quando a poeira é baixa, mas se espalha por uma área ampla, indica a aproximação da infantaria. Quando se divide em várias direções, mostra que grupos foram enviados para coletar lenha. Pequenas nuvens de poeira movendo-se de um lado para outro indicam que o exército está acampando.
+24. Palavras humildes acompanhadas de preparativos intensificados são sinais de que o inimigo está prestes a avançar. Linguagem agressiva e movimentos como se fosse atacar indicam que ele irá recuar.
+25. Quando carros leves avançam primeiro e se posicionam nas alas, é sinal de que o inimigo está se organizando para a batalha.
+26. Propostas de paz sem um acordo formal indicam um plano oculto.
+27. Quando há muita movimentação e os soldados rapidamente formam fileiras, significa que o momento decisivo chegou.
+28. Quando alguns avançam e outros recuam, trata-se de uma isca.
+36 29. Quando os soldados permanecem apoiados em suas lanças, estão fracos por falta de alimento.
+30. Se aqueles que são enviados para buscar água começam bebendo antes de levá-la, o exército está sofrendo de sede.
+31. Se o inimigo vê uma vantagem a ser obtida e não faz esforço para aproveitá-la, seus soldados estão exaustos.
+32. Se pássaros se reúnem em determinado lugar, ele está desocupado. Ruídos à noite indicam nervosismo.
+33. Se há desordem no acampamento, a autoridade do general é fraca. Se bandeiras e estandartes são constantemente movidos, há indícios de rebelião. Se os oficiais estão irritados, significa que os soldados estão cansados.
+34. Quando um exército alimenta seus cavalos com grãos e abate seu gado para comer, e quando os homens não penduram suas panelas sobre o fogo, demonstrando que não pretendem voltar às tendas, pode-se saber que estão determinados a lutar até a morte.
+35. Ver soldados cochichando em pequenos grupos ou falando em voz baixa indica descontentamento entre as fileiras.
+36. Recompensas frequentes demais indicam que o inimigo está no fim de seus recursos; punições excessivas revelam uma situação de grande aflição.
+37 37. Começar com bravatas e depois se intimidar diante do número do inimigo demonstra extrema falta de inteligência.
+38. Quando enviados chegam com palavras elogiosas, é sinal de que o inimigo deseja uma trégua.
+39. Se as tropas inimigas avançam com fúria e permanecem diante das nossas por muito tempo, sem atacar nem recuar, a situação exige grande vigilância e cautela.
+40. Se nossas tropas não são mais numerosas que as do inimigo, isso já é suficiente; significa apenas que não podemos fazer um ataque direto. O que podemos fazer é concentrar toda a nossa força disponível, manter o inimigo sob observação constante e obter reforços.
+41. Aquele que não planeja e subestima o adversário certamente será capturado por ele.
+42. Se os soldados são punidos antes de se apegarem ao líder, não se tornarão obedientes; e, sem obediência, serão praticamente inúteis. Se, por outro lado, depois de se apegarem, a disciplina não for aplicada, ainda assim serão inúteis.
+43. Portanto, os soldados devem ser tratados inicialmente com humanidade, mas mantidos sob controle por meio de disciplina rigorosa. Esse é um caminho seguro para a vitória.
+38 44. Se, no treinamento, as ordens são habitualmente cumpridas, o exército será bem disciplinado; caso contrário, sua disciplina será deficiente.
+45. Se um general demonstra confiança em seus homens, mas insiste sempre na obediência às suas ordens, o benefício será mútuo.
+39 X Terreno 1. Sun Tzu disse: Podemos distinguir seis tipos de terreno, a saber:
+(1) terreno acessível;
+(2) terreno difícil (ou enredante);
+(3) terreno de indecisão;
+(4) passagens estreitas;
+(5) alturas íngremes;
+(6) posições muito distantes do inimigo.
+2. O terreno que pode ser livremente percorrido por ambos os lados é chamado de acessível.
+3. Em relação a esse tipo de terreno, ocupe primeiro as posições elevadas e ensolaradas, e proteja cuidadosamente suas linhas de suprimento. Assim, você poderá lutar com vantagem.
+4. O terreno que pode ser abandonado, mas é difícil de retomar, é chamado de terreno difícil (ou enredante).
+5. A partir de uma posição desse tipo, se o inimigo estiver despreparado, você pode avançar e derrotá-lo. Mas, se o inimigo estiver preparado para sua chegada e você não conseguir vencê-lo, então, como a retirada será difícil, o desastre será inevitável.
+40 6. Quando a posição é tal que nenhum dos lados ganha vantagem ao fazer o primeiro movimento, ela é chamada de terreno de indecisão.
+7. Em um terreno desse tipo, mesmo que o inimigo ofereça uma isca atraente, é aconselhável não avançar, mas sim recuar, atraindo o inimigo; então, quando parte de seu exército tiver se deslocado, podemos atacar com vantagem.
+8. Quanto às passagens estreitas, se você puder ocupá-las primeiro, fortifique-as bem e aguarde a chegada do inimigo.
+9. Se o inimigo chegar antes e ocupar a passagem, não o ataque se ela estiver bem guarnecida, mas apenas se estiver fracamente defendida.
+10. Em relação às alturas íngremes, se você chegar antes do adversário, ocupe as posições elevadas e ensolaradas e aguarde que ele suba.
+11. Se o inimigo já as tiver ocupado antes de você, não o siga; recue e tente atraí-lo para fora.
+12. Se você estiver muito distante do inimigo, e a força dos dois exércitos for equivalente, não será fácil provocar uma batalha, e lutar será desvantajoso.
+41 13. Esses seis são os princípios relacionados à Terra. O general que ocupa um posto de responsabilidade deve ter o cuidado de estudá-los.
+14. Um exército está sujeito a seis tipos de calamidades que não surgem de causas naturais, mas de falhas pelas quais o general é responsável. São elas:
+(1) Fuga;
+(2) insubordinação;
+(3) colapso;
+(4) ruína;
+(5) desorganização;
+(6) debandada.
+15. Mantidas as demais condições iguais, se uma força ataca outra dez vezes maior, o resultado será a fuga da primeira.
+16. Quando os soldados são fortes demais e os oficiais fracos, o resultado é insubordinação. Quando os oficiais são fortes demais e os soldados fracos, o resultado é colapso.
+17. Quando oficiais superiores estão irados e insubordinados, e ao encontrar o inimigo entram em combate por conta própria, movidos pelo ressentimento, antes que o comandante-chefe possa avaliar a situação, o resultado é ruína.
+18. Quando o general é fraco e sem autoridade; quando suas ordens não são claras e precisas; quando 42 43 não há funções definidas para oficiais e soldados, e as fileiras são formadas de maneira desleixada e desordenada, o resultado é a completa desorganização.
+19. Quando um general, incapaz de avaliar a força do inimigo, permite que uma força inferior enfrente uma maior, ou lança um destacamento fraco contra um mais poderoso, e negligencia colocar tropas selecionadas na linha de frente, o resultado será a debandada.
+20. Essas são seis maneiras de provocar a derrota, que devem ser cuidadosamente observadas pelo general que ocupa um posto de responsabilidade.
+21. A configuração natural do terreno é a melhor aliada do soldado; mas a capacidade de avaliar o adversário, de controlar as condições da vitória e de calcular com precisão dificuldades, perigos e distâncias é o que define um grande general.
+22. Aquele que conhece esses princípios e os aplica na prática vencerá suas batalhas. Aquele que não os conhece, nem os aplica, certamente será derrotado.
+23. Se lutar certamente resultará em vitória, então deve-se lutar, mesmo que o governante proíba; se lutar não resultar em vitória, então não se deve lutar, mesmo que o governante ordene.
+24. O general que avança sem buscar fama e recua sem temer a desonra, cujo único pensamento é proteger seu país e servir bem ao soberano, é o tesouro do reino.
+25. Trate seus soldados como seus filhos, e eles o seguirão até os vales mais profundos; trate-os como filhos queridos, e permanecerão ao seu lado até a morte.
+26. Se, porém, você for indulgente, mas incapaz de fazer valer sua autoridade; bondoso, mas incapaz de impor suas ordens; e, além disso, incapaz de conter a desordem, então seus soldados serão como crianças mimadas — inúteis para qualquer finalidade prática.
+27. Se sabemos que nossos homens estão em condições de atacar, mas não sabemos que o inimigo não está vulnerável ao ataque, avançamos apenas metade do caminho rumo à vitória.
+28. Se sabemos que o inimigo está vulnerável ao ataque, mas não sabemos que nossos homens não estão em condições de atacar, avançamos apenas metade do caminho rumo à vitória.
+29. Se sabemos que o inimigo está vulnerável ao ataque e também sabemos que nossos homens estão em condições de atacar, mas não sabemos que a natureza do terreno torna o combate impraticável, ainda assim avançamos apenas metade do caminho rumo à vitória.
+44 30. Assim, o soldado experiente, uma vez em movimento, nunca se confunde; uma vez que desmonta o acampamento, nunca fica sem saber o que fazer.
+31. Portanto, diz-se: se você conhece o inimigo e conhece a si mesmo, sua vitória não estará em dúvida; se conhece o Céu e a Terra, poderá tornar sua vitória completa.
+45 XI 1. Sun Tzu disse: A arte da guerra reconhece nove tipos de terreno:
+(1) terreno de dispersão;
+(2) terreno fácil;
+(3) terreno contestado;
+(4) terreno aberto;
+(5) terreno de vias convergentes;
+(6) terreno sério;
+(7) terreno difícil;
+(8) terreno cercado;
+(9) terreno desesperador.
+2. Quando um líder combate em seu próprio território, trata-se de terreno de dispersão.
+3. Quando ele penetra em território inimigo, mas não muito profundamente, trata-se de terreno fácil.
+4. O terreno cuja posse traz grande vantagem para qualquer um dos lados é o terreno contestado.
+5. O terreno onde ambos os lados têm liberdade de movimento é o terreno aberto.
+6. O terreno que constitui a chave para três estados vizinhos, de modo que quem o ocupa primeiro tem a maior vantagem sobre os demais 46 As Nove Situações 47 império à sua disposição, é chamado de terreno de vias convergentes.
+7. Quando um exército penetrou profundamente no território inimigo, deixando várias cidades fortificadas à retaguarda, trata-se de terreno sério.
+8. Florestas montanhosas, encostas íngremes, pântanos e terrenos alagadiços — todo terreno difícil de atravessar — constituem o terreno difícil.
+9. O terreno que é alcançado por desfiladeiros estreitos e do qual só se pode sair por caminhos tortuosos, de modo que um pequeno número de inimigos possa derrotar uma grande força, é chamado de terreno cercado.
+10. O terreno no qual só podemos evitar a destruição lutando imediatamente é o terreno desesperador.
+11. Portanto: em terreno de dispersão, não lute. Em terreno fácil, não permaneça parado. Em terreno contestado, não ataque.
+12. Em terreno aberto, não tente bloquear o caminho do inimigo. Em terreno de vias convergentes, una-se aos aliados.
+13. Em terreno sério, recolha provisões. Em terreno difícil, mantenha-se em marcha constante.
+14. Em terreno cercado, recorra à estratégia. Em terreno desesperador, lute.
+15. Aqueles que eram considerados líderes habilidosos na antiguidade sabiam como abrir uma brecha entre a vanguarda e a retaguarda do inimigo; impedir a cooperação entre suas grandes e pequenas divisões; dificultar que as tropas de elite socorressem as mais fracas e que os oficiais reorganizassem seus homens.
+16. Quando os homens do inimigo estavam unidos, eles sabiam como mantê-los em desordem.
+17. Quando era vantajoso, avançavam; caso contrário, permaneciam imóveis.
+18. Se perguntarem como lidar com um grande exército inimigo bem organizado e prestes a atacar, eu diria: “Comece tomando algo que o adversário valoriza; assim, ele se tornará suscetível à sua vontade.” 19. A rapidez é a essência da guerra: aproveite a falta de preparo do inimigo, avance por rotas inesperadas e ataque pontos desguarnecidos.
+20. Estes são os princípios a serem seguidos por uma força invasora: quanto mais profundamente você penetrar no território inimigo, maior será a coesão de suas tropas, e assim os defensores não conseguirão prevalecer contra você.
+48 21. Faça incursões em territórios férteis para abastecer seu exército com alimentos.
+22. Cuide atentamente do bem-estar de seus homens e não os sobrecarregue. Concentre sua energia e preserve suas forças. Mantenha seu exército constantemente em movimento e elabore planos insondáveis.
+23. Coloque seus soldados em posições das quais não haja escape, e eles preferirão a morte à fuga. Se estiverem dispostos a enfrentar a morte, não haverá nada que não possam realizar. Oficiais e soldados darão o máximo de si.
+24. Soldados em situações desesperadoras perdem o medo. Sem lugar para refúgio, permanecerão firmes; em território inimigo, resistirão com obstinação; sem alternativa, lutarão com determinação.
+25. Assim, sem necessidade de organização formal, os soldados estarão sempre alertas; sem precisar de ordens, agirão conforme sua vontade; sem restrições, serão fiéis; e, mesmo sem comandos, poderão ser confiáveis.
+26. Proíba o uso de presságios e elimine dúvidas supersticiosas. Assim, até que a morte chegue, não haverá calamidade a temer.
+49 50 27. Se nossos soldados não estão sobrecarregados de riquezas, não é porque desprezam o dinheiro; se suas vidas não são excessivamente longas, não é porque rejeitam a longevidade.
+28. No dia em que são enviados à batalha, seus soldados podem chorar — os que estão sentados molhando suas vestes, e os deitados deixando as lágrimas correrem pelo rosto. Mas, uma vez encurralados, demonstrarão a coragem de um homem de Chu ou de Kuei.
+29. O estrategista habilidoso pode ser comparado ao shuai-jan. O shuai-jan é uma serpente encontrada nas montanhas Chung. Se você a atacar na cabeça, será atacado pela cauda; se atacar a cauda, será atacado pela cabeça; se atacar o meio, será atacado por ambas.
+30. Se perguntarem se um exército pode imitar o shuai-jan, eu responderia: sim. Pois os homens de Wu e de Yueh são inimigos; ainda assim, se estiverem atravessando um rio no mesmo barco e forem surpreendidos por uma tempestade, ajudar-se-ão mutuamente, como a mão esquerda ajuda a direita.
+31. Portanto, não basta confiar apenas em amarrar os cavalos ou enterrar as rodas das carroças no chão.
+32. O princípio para comandar um exército é estabelecer um único padrão de coragem que todos devem alcançar.
+33. Saber tirar o melhor proveito tanto da força quanto da fraqueza — isso depende do uso adequado do terreno.
+34. Assim, o general habilidoso conduz seu exército como se estivesse guiando um único homem, queira ele ou não, pela mão.
+35. Cabe ao general ser reservado e, assim, garantir o sigilo; ser íntegro e justo, e, assim, manter a ordem.
+36. Ele deve ser capaz de confundir seus oficiais e soldados com informações e aparências enganosas, mantendo-os na mais completa ignorância.
+37. Ao alterar suas disposições e mudar seus planos, mantém o inimigo sem conhecimento preciso. Ao deslocar seu acampamento e seguir rotas indiretas, impede que o inimigo antecipe suas intenções.
+38. No momento decisivo, o líder de um exército age como alguém que sobe a uma altura e depois chuta a escada atrás de si. Ele leva seus homens profundamente em território inimigo antes de revelar suas intenções.
+39. Ele queima seus barcos e quebra suas panelas; como um pastor conduzindo um rebanho, guia seus homens de um lado para outro, sem que saibam para onde estão indo.
+51 40. Reunir o exército e conduzi-lo ao perigo — isso pode ser chamado de tarefa do general.
+41. As diferentes medidas adequadas aos nove tipos de terreno, a conveniência de táticas ofensivas ou defensivas e as leis fundamentais da natureza humana — são aspectos que devem, sem dúvida, ser estudados.
+42. Ao invadir território inimigo, o princípio geral é: penetrar profundamente gera coesão; penetrar apenas superficialmente resulta em dispersão.
+43. Quando você deixa seu próprio país para trás e leva seu exército através de território vizinho, encontra-se em terreno crítico. Quando há meios de comunicação em todas as direções, o terreno é de vias convergentes.
+44. Quando você penetra profundamente em um país, trata-se de terreno sério. Quando penetra pouco, trata-se de terreno fácil.
+45. Quando você tem as fortalezas do inimigo à retaguarda e passagens estreitas à frente, trata-se de terreno cercado. Quando não há qualquer possibilidade de refúgio, trata-se de terreno desesperador.
+46. Portanto, em terreno de dispersão, eu inspiraria meus homens com unidade de propósito. Em terreno fácil, eu garantiria uma conexão estreita entre todas as partes do meu exército.
+52 47. Em terreno contestado, eu apressaria minha retaguarda.
+48. Em terreno aberto, manteria vigilância constante sobre minhas defesas. Em terreno de vias convergentes, fortaleceria minhas alianças.
+49. Em terreno sério, procuraria garantir um fluxo contínuo de suprimentos. Em terreno difícil, continuaria avançando pela estrada.
+50. Em terreno cercado, bloquearia qualquer rota de retirada. Em terreno desesperador, deixaria claro aos meus soldados que não há esperança de salvar a própria vida.
+51. Pois é da natureza do soldado oferecer resistência obstinada quando cercado, lutar com determinação quando não há alternativa e obedecer prontamente quando se encontra em perigo.
+52. Não podemos formar alianças com príncipes vizinhos sem conhecer seus planos. Não estamos aptos a liderar um exército em marcha se não conhecermos o terreno — suas montanhas e florestas, armadilhas e precipícios, pântanos e áreas alagadas. Não seremos capazes de aproveitar as vantagens naturais sem o uso de guias locais.
+53. Ignorar qualquer um desses quatro ou cinco princípios não condiz com um governante voltado para a guerra.
+53 54. Quando um governante guerreiro ataca um Estado poderoso, sua habilidade se mostra ao impedir a concentração das forças inimigas. Ele intimida seus adversários, e seus aliados são impedidos de se unir contra ele.
+55. Assim, ele não busca alianças indiscriminadas nem fortalece o poder de outros Estados. Executa seus próprios planos secretos, mantendo seus oponentes sob pressão. Dessa forma, é capaz de conquistar suas cidades e derrubar seus reinos.
+56. Conceda recompensas sem se prender a regras rígidas, dê ordens sem se limitar a arranjos prévios; assim, você poderá comandar todo um exército como se estivesse lidando com um único homem.
+57. Confronte seus soldados com a ação em si; nunca revele seus planos. Quando a situação for favorável, mostre-a claramente; quando for desfavorável, não diga nada.
+58. Coloque seu exército em perigo extremo, e ele sobreviverá; lance-o em situações desesperadoras, e ele sairá em segurança.
+59. Pois é justamente quando uma força se encontra em situação crítica que ela é capaz de desferir um golpe decisivo para a vitória.
+60. O sucesso na guerra é alcançado ao nos adaptarmos cuidadosamente às intenções do inimigo.
+54 61. Ao persistir em pressionar o flanco do inimigo, acabaremos, no fim, por eliminar o comandante-chefe.
+62. Isso é chamado de capacidade de alcançar um objetivo por meio da astúcia.
+63. No dia em que assumir o comando, bloqueie as passagens de fronteira, destrua os registros oficiais e interrompa a passagem de todos os emissários.
+64. Seja firme no conselho, para que possa manter o controle da situação.
+65. Se o inimigo deixar uma abertura, você deve avançar imediatamente.
+66. Antecipe-se ao adversário tomando aquilo que ele valoriza e, com sutileza, determine o momento de sua chegada ao campo.
+67. Siga o caminho definido pelas regras e adapte-se ao inimigo até que possa travar uma batalha decisiva.
+68. No início, mostre a reserva de uma donzela, até que o inimigo lhe dê uma oportunidade; depois, imite a rapidez de uma lebre em fuga — e será tarde demais para o inimigo reagir.
+55 XII 1. Sun Tzu disse: Há cinco maneiras de atacar com fogo. A primeira é incendiar os soldados em seu acampamento; a segunda é queimar suprimentos; a terceira é incendiar os comboios de bagagem; a quarta é queimar arsenais e depósitos; a quinta é lançar fogo sobre o inimigo.
+2. Para realizar um ataque com fogo, é necessário ter os meios adequados. O material para provocar incêndios deve estar sempre pronto.
+3. Existe uma estação apropriada para realizar ataques com fogo e dias específicos para iniciar incêndios.
+4. A estação adequada é quando o clima está muito seco; os dias específicos são aqueles em que a lua está nas constelações da Peneira, da Muralha, da Asa ou da Travessa, pois nesses dias há ventos ascendentes.
+5. Ao atacar com fogo, deve-se estar preparado para cinco possíveis desdobramentos:
+6. (1) Quando o fogo irromper dentro do acampamento inimigo, responda imediatamente com um ataque externo.
+7. (2) Se houver um incêndio, mas os soldados inimigos permanecerem calmos, aguarde o momento certo e não ataque.
+56 O Ataque pelo Fogo 8. (3) Quando a força das chamas atingir o auge, acompanhe com um ataque, se isso for viável; caso contrário, permaneça onde está.
+9. (4) Se for possível realizar um ataque com fogo a partir do exterior, não espere que ele comece internamente, mas ataque no momento mais favorável.
+10. (5) Ao iniciar um incêndio, posicione-se a favor do vento. Não ataque contra o vento.
+11. Um vento que surge durante o dia costuma durar mais; a brisa noturna, porém, logo se dissipa.
+12. Em todo exército, devem-se conhecer esses cinco desdobramentos relacionados ao uso do fogo, calcular os movimentos dos astros e observar os dias adequados.
+13. Assim, aqueles que usam o fogo como auxílio ao ataque demonstram inteligência; os que usam a água como auxílio ao ataque obtêm um reforço de força.
+14. Por meio da água, o inimigo pode ser contido, mas não totalmente despojado de seus recursos.
+15. Infeliz é aquele que tenta vencer batalhas e ter sucesso em ataques sem cultivar o espírito de iniciativa; o resultado será perda de tempo e estagnação geral.
+57 16. Assim, diz-se: o governante esclarecido planeja com antecedência; o bom general cultiva seus recursos.
+17. Não se mova a menos que veja uma vantagem; não empregue suas tropas a menos que haja algo a ganhar; não lute a menos que a situação seja crítica.
+18. Nenhum governante deve mobilizar tropas apenas para satisfazer seu próprio ressentimento; nenhum general deve travar uma batalha por mero capricho.
+19. Se houver vantagem, avance; se não, permaneça onde está.
+20. A ira pode, com o tempo, transformar-se em alegria; a irritação pode dar lugar à satisfação.
+21. Mas um reino que foi destruído jamais pode ser restaurado; nem os mortos podem voltar à vida.
+22. Portanto, o governante esclarecido é prudente, e o bom general é cauteloso. Esse é o caminho para manter um país em paz e um exército intacto.
+58 XIII O Uso de Espiões 1. Sun Tzu disse: Reunir um exército de cem mil homens e fazê-lo marchar por grandes distâncias causa enormes prejuízos ao povo e esgota os recursos do Estado. O gasto diário chega a mil onças de prata. Haverá agitação tanto no país quanto fora dele, e homens cairão exaustos pelas estradas. Até setecentas mil famílias terão seu trabalho prejudicado.
+2. Exércitos inimigos podem se enfrentar por anos, lutando por uma vitória que será decidida em um único dia. Sendo assim, permanecer ignorante sobre a condição do inimigo apenas por economizar cem onças de prata em recompensas e pagamentos é o auge da desumanidade.
+3. Quem age dessa forma não é um líder de homens, não é um auxílio digno ao soberano, nem um mestre da vitória.
+4. Assim, o que permite ao governante sábio e ao bom general atacar, vencer e realizar feitos além do alcance de homens comuns é o conhecimento prévio.
+5. Esse conhecimento prévio não pode ser obtido por meio de espíritos; não pode ser alcançado indutivamente pela experiência, nem por deduções lógicas.
+59 6. O conhecimento das disposições do inimigo só pode ser obtido por meio de outras pessoas.
+7. Daí o uso de espiões, dos quais há cinco tipos:
+(1) espiões locais;
+(2) espiões internos;
+(3) espiões convertidos;
+(4) espiões sacrificáveis;
+(5) espiões sobrevivente 8. Quando esses cinco tipos de espiões atuam em conjunto, ninguém consegue descobrir o sistema secreto. Isso é chamado de “manipulação divina dos fios”. É a habilidade mais valiosa de um soberano.
+9. Ter espiões locais significa empregar os habitantes da região.
+10. Ter espiões internos significa utilizar oficiais do inimigo.
+11. Ter espiões convertidos significa capturar espiões do inimigo e usá-los para nossos próprios propósitos.
+12. Ter espiões sacrificáveis significa realizar certas ações de forma aberta para enganar, permitindo que esses espiões tomem conhecimento e levem a informação ao inimigo.
+13. Por fim, espiões sobreviventes são aqueles que retornam com informações do campo inimigo.
+60 14. Assim, não há ninguém em todo o exército com quem se deva manter relações mais íntimas do que com os espiões. Ninguém deve ser mais generosamente recompensado. Em nenhum outro assunto se deve preservar maior sigilo.
+15. Os espiões não podem ser empregados com eficácia sem certa sagacidade intuitiva.
+16. Eles não podem ser bem administrados sem benevolência e franqueza.
+17. Sem uma mente sutil e engenhosa, não se pode ter certeza da veracidade de seus relatos.
+18. Seja sutil, seja sutil! E utilize seus espiões em todo tipo de tarefa.
+19. Se uma informação secreta for revelada por um espião antes do momento oportuno, ele deve ser executado, juntamente com a pessoa a quem revelou o segredo.
+20. Seja para destruir um exército, tomar uma cidade ou eliminar um indivíduo, é sempre necessário começar descobrindo os nomes dos assistentes, ajudantes, porteiros e sentinelas do comandante inimigo. Nossos espiões devem ser encarregados de obter essas informações.
+21. Os espiões inimigos que vierem espionar devem ser identificados, atraídos com recompensas, conduzidos para longe e bem tratados. Assim, tornar-se-ão espiões convertidos e úteis ao nosso serviço.
+61 22. É por meio das informações trazidas pelo espião convertido que conseguimos recrutar e empregar espiões locais e internos.
+23. É também graças a essas informações que podemos fazer com que o espião sacrificável leve notícias falsas ao inimigo.
+24. Por fim, é com base nessas informações que o espião sobrevivente pode ser utilizado nos momentos apropriados.
+25. O objetivo de toda forma de espionagem é o conhecimento do inimigo; e esse conhecimento, em primeiro lugar, depende do espião convertido. Por isso, ele deve ser tratado com a máxima generosidade.
+26. Antigamente, a ascensão da dinastia Yin deveu-se a I Chih, que havia servido sob a dinastia Hsia. Da mesma forma, a ascensão da dinastia Chou deveu-se a Lu Ya, que havia servido sob a dinastia Yin.
+27. Portanto, apenas o governante esclarecido e o general sábio utilizam a mais alta inteligência do exército para fins de espionagem, alcançando assim grandes resultados. Os espiões são um elemento extremamente importante na guerra, pois deles depende a capacidade de movimentação do exército.
+62
