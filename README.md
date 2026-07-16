@@ -62,6 +62,20 @@ python train.py --preset large --steps 2000
 Também dá para sobrescrever qualquer dimensão individual
 (`--n-layer`, `--n-head`, `--n-embd`, `--block-size`, `--batch-size`).
 
+### Tokenizador e regularização
+
+```bash
+# subpalavras (BPE) com dropout — gera palavras inteiras, sem soletrar
+python train.py --tokenizer bpe --bpe-vocab 512 --dropout 0.2 --steps 2000
+```
+
+- `--tokenizer {char,bpe}`: caractere (padrão) ou subpalavras
+- `--bpe-vocab N`: tamanho do vocabulário BPE (≥ 256)
+- `--dropout P`: taxa de dropout (regularização; padrão 0,1)
+
+O treino salva sempre o checkpoint de **menor loss de validação** (early
+stopping), então o overfitting no fim não estraga o modelo final.
+
 ### Treinar no seu próprio material (PDFs)
 
 O corpus incluído foi gerado a partir de PDFs sobre lógica de programação,
@@ -108,6 +122,34 @@ ajustes destravaram o aprendizado:
 - **GELU** no lugar de `tanh` no MLP (a `tanh` saturava e matava o gradiente)
 - **Agendamento de learning rate** (warmup + decaimento cosseno)
 - **Init estilo GPT-2** nas projeções residuais (escala `1/sqrt(2*n_layer)`)
+
+### Tokenizador BPE e regularização
+
+Trocar o tokenizador de caractere pelo **BPE** (subpalavras) comprime o
+corpus ~1,9× e faz o modelo gerar *palavras inteiras* em vez de soletrar.
+Mas, com um corpus pequeno, o BPE **sofreu overfitting** — a val loss
+começava a subir na metade do treino. A cura foram dois clássicos:
+
+- **Dropout** (`--dropout 0.2`): regularização que zera ativações no treino
+- **Early stopping**: o treino guarda o checkpoint de menor val loss, não o
+  último
+
+Comparação por caractere (métrica justa entre tokenizadores):
+
+| configuração                | val loss/caractere |
+|-----------------------------|:------------------:|
+| char                        | 1,57               |
+| BPE sem dropout             | ~1,99 (overfit)    |
+| **BPE + dropout 0,2**       | **~1,55**          |
+
+Amostra do BPE regularizado (prompt "A arte da guerra ensina"):
+
+> A arte da guerra ensina. Quando os LLMs [...] a melhoria e a informação
+> de palavras [...] pode ser usado para inteligência ou treinado [...] o
+> inimigo que o está [...] para reforçar sua variável.
+
+Repare como a EVA mistura, num mesmo texto, os temas dos três domínios do
+corpus: estratégia militar, modelos de linguagem e programação.
 
 ## Como a EVA funciona (visão geral)
 
