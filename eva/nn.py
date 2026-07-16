@@ -123,14 +123,14 @@ class CausalSelfAttention(Module):
 
 
 class MLP(Module):
-    """Rede feed-forward com expansão 4x e ativação tanh."""
+    """Rede feed-forward com expansão 4x e ativação GELU."""
 
     def __init__(self, dim: int):
         self.fc = Linear(dim, 4 * dim)
         self.proj = Linear(4 * dim, dim)
 
     def forward(self, x: Tensor) -> Tensor:
-        return self.proj(self.fc(x).tanh())
+        return self.proj(self.fc(x).gelu())
 
 
 class Block(Module):

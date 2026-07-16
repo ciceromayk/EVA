@@ -38,6 +38,8 @@ def test_elementwise():
     check(lambda t: (t * 2.0).tanh(), (4, 3))
     check(lambda t: (t * t + 1.0).log(), (5,))
     check(lambda t: t.exp(), (3, 2))
+    check(lambda t: t.gelu(), (4, 3))
+    check(lambda t: (t * 1.5).relu() + t, (4, 3))
 
 
 def test_matmul_and_reduce():

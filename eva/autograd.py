@@ -239,6 +239,36 @@ class Tensor:
 
         return Tensor._result(data, (self,), backward)
 
+    def relu(self):
+        data = np.maximum(self.data, 0.0)
+
+        def backward(grad):
+            if self.requires_grad:
+                self._accumulate(grad * (self.data > 0.0))
+
+        return Tensor._result(data, (self,), backward)
+
+    def gelu(self):
+        """GELU (aproximação tanh) — ativação padrão de Transformers.
+
+        Diferente da tanh pura, não satura para entradas positivas, então
+        deixa o gradiente fluir e o modelo aprende muito melhor.
+        """
+        x = self.data
+        k = 0.7978845608028654  # sqrt(2/pi)
+        inner = k * (x + 0.044715 * x ** 3)
+        t = np.tanh(inner)
+        data = 0.5 * x * (1.0 + t)
+
+        def backward(grad):
+            if self.requires_grad:
+                d_inner = k * (1.0 + 3.0 * 0.044715 * x ** 2)
+                dt = (1.0 - t * t) * d_inner
+                dx = 0.5 * (1.0 + t) + 0.5 * x * dt
+                self._accumulate(grad * dx)
+
+        return Tensor._result(data, (self,), backward)
+
     # ------------------------------------------------------------------
     # Reduções e mudanças de forma
     # ------------------------------------------------------------------

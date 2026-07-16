@@ -8,6 +8,7 @@ amostragem autoregressiva de texto.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -37,6 +38,14 @@ class GPT(Module):
         self.blocks = [Block(config.n_embd, config.n_head) for _ in range(config.n_layer)]
         self.ln_f = LayerNorm(config.n_embd)
         self.head = Linear(config.n_embd, config.vocab_size, bias=False)
+
+        # Init estilo GPT-2: encolhe as projeções de saída de cada bloco por
+        # 1/sqrt(2*n_layer). Sem isso, a variância cresce ao longo do fluxo
+        # residual e o treino fica instável / lento.
+        residual_scale = 1.0 / math.sqrt(2 * config.n_layer)
+        for block in self.blocks:
+            block.attn.proj.weight.data *= residual_scale
+            block.mlp.proj.weight.data *= residual_scale
 
     def forward(self, idx: np.ndarray, targets: np.ndarray | None = None):
         """idx: (B, T) inteiros. Retorna (logits, loss)."""

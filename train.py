@@ -12,6 +12,7 @@ minutos, e ainda assim aprende a estrutura básica do português do corpus.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import pickle
 import time
@@ -56,6 +57,15 @@ def load_checkpoint():
     return model, tokenizer
 
 
+def lr_schedule(step, peak_lr, warmup, total, min_ratio=0.1):
+    """Warmup linear seguido de decaimento cosseno até min_ratio*peak_lr."""
+    if step < warmup:
+        return peak_lr * step / warmup
+    progress = (step - warmup) / max(1, total - warmup)
+    cosine = 0.5 * (1.0 + math.cos(math.pi * min(progress, 1.0)))
+    return peak_lr * (min_ratio + (1.0 - min_ratio) * cosine)
+
+
 def train(args) -> None:
     with open(args.data, encoding="utf-8") as f:
         text = f.read()
@@ -74,9 +84,14 @@ def train(args) -> None:
 
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     rng = np.random.default_rng(args.seed)
+    warmup = max(1, int(args.steps * 0.05))
     start = time.time()
 
     for step in range(1, args.steps + 1):
+        # agendamento do learning rate: aquecimento linear e depois decaimento
+        # cosseno até 10% do pico — estabiliza o início e refina o final.
+        optimizer.lr = lr_schedule(step, args.lr, warmup, args.steps)
+
         x, y = get_batch(train_data, config.block_size, args.batch_size, rng)
         _, loss = model.forward(x, y)
 
