@@ -70,6 +70,24 @@ Tudo (upload de PDF, treino, geração) roda nos servidores do Replit; o
 iPad só mostra a tela. Dica: use o preset **`nano`** ou **`small`** para o
 treino terminar rápido.
 
+### Alternativa: Render (link fixo, conectado ao GitHub)
+
+Se o Replit parecer limitado, o **Render** publica o painel com um link
+fixo `.onrender.com` conectado direto ao repositório. O projeto já traz o
+`render.yaml`:
+
+1. Crie uma conta grátis em **https://render.com** (pode ser pelo iPad).
+2. **New + → Web Service** e conecte sua conta do GitHub, escolhendo o
+   repositório `ciceromayk/EVA` e o branch
+   `claude/custom-ai-from-scratch-dx8d5p`.
+3. O Render lê o `render.yaml`, instala tudo e sobe o painel. Ao final ele
+   te dá uma URL fixa — abra no Safari do iPad e adicione à tela inicial.
+
+No plano grátis o serviço "hiberna" após alguns minutos parado e leva
+~30–50s para acordar no primeiro acesso; depois disso responde normal.
+Como o disco é temporário, materiais e checkpoints valem para a sessão
+atual (para guardar de vez, treine e baixe/veja o resultado na hora).
+
 
 ## Uso por linha de comando
 

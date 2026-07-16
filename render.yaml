@@ -1,0 +1,15 @@
+# Configuração do Render (https://render.com) — publica o painel da EVA
+# com um link fixo .onrender.com, conectado direto ao repositório do GitHub.
+#
+# No painel do Render: New + -> Web Service -> conecte este repositório.
+# O Render lê este arquivo, instala as dependências e sobe o app.py.
+services:
+  - type: web
+    name: eva-painel
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
