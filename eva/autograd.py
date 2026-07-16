@@ -80,9 +80,12 @@ class Tensor:
         return out
 
     def _accumulate(self, grad: np.ndarray) -> None:
+        # No primeiro gradiente, guarda uma cópia direto — evita alocar um
+        # array de zeros e uma passada de soma a cada acúmulo.
         if self.grad is None:
-            self.grad = np.zeros_like(self.data)
-        self.grad += grad
+            self.grad = np.array(grad, dtype=np.float32, copy=True)
+        else:
+            self.grad += grad
 
     def backward(self) -> None:
         """Backpropagation a partir deste tensor (tipicamente a loss)."""
@@ -256,13 +259,15 @@ class Tensor:
         """
         x = self.data
         k = 0.7978845608028654  # sqrt(2/pi)
-        inner = k * (x + 0.044715 * x ** 3)
+        # x*x*x é ~10x mais rápido que np.power(x, 3) para arrays grandes
+        x2 = x * x
+        inner = k * (x + 0.044715 * x2 * x)
         t = np.tanh(inner)
         data = 0.5 * x * (1.0 + t)
 
         def backward(grad):
             if self.requires_grad:
-                d_inner = k * (1.0 + 3.0 * 0.044715 * x ** 2)
+                d_inner = k * (1.0 + 0.134145 * x2)  # 3 * 0.044715
                 dt = (1.0 - t * t) * d_inner
                 dx = 0.5 * (1.0 + t) + 0.5 * x * dt
                 self._accumulate(grad * dx)
@@ -382,10 +387,51 @@ def dropout(x: Tensor, p: float) -> Tensor:
     return Tensor._result(data, (x,), backward)
 
 
+def layer_norm(x: Tensor, gamma: Tensor, beta: Tensor, eps: float = 1e-5) -> Tensor:
+    """LayerNorm fundido (normaliza a última dimensão) com gradiente analítico.
+
+    Montar o LayerNorm com mean/sub/mul/pow cria vários nós e temporários por
+    chamada; ele roda 2x por bloco. Fundir numa operação só acelera o passo.
+    """
+    xd = x.data
+    mu = xd.mean(axis=-1, keepdims=True)
+    xc = xd - mu
+    var = (xc * xc).mean(axis=-1, keepdims=True)
+    rstd = 1.0 / np.sqrt(var + eps)
+    xhat = xc * rstd
+    data = xhat * gamma.data + beta.data
+
+    def backward(grad):
+        axes = tuple(range(grad.ndim - 1))
+        if gamma.requires_grad:
+            gamma._accumulate((grad * xhat).sum(axis=axes))
+        if beta.requires_grad:
+            beta._accumulate(grad.sum(axis=axes))
+        if x.requires_grad:
+            dxhat = grad * gamma.data
+            dx = rstd * (dxhat
+                         - dxhat.mean(axis=-1, keepdims=True)
+                         - xhat * (dxhat * xhat).mean(axis=-1, keepdims=True))
+            x._accumulate(dx)
+
+    return Tensor._result(data, (x, gamma, beta), backward)
+
+
 def softmax(x: Tensor, axis: int = -1) -> Tensor:
-    """Softmax numericamente estável construído com as primitivas do grafo."""
-    # Subtrair o máximo (constante, sem gradiente) só melhora a estabilidade
-    # numérica; não altera o resultado nem o gradiente do softmax.
-    stable = x + Tensor(-x.data.max(axis=axis, keepdims=True))
-    e = stable.exp()
-    return e * e.sum(axis=axis, keepdims=True) ** -1.0
+    """Softmax estável como uma ÚNICA operação, com gradiente analítico.
+
+    Construir o softmax a partir de exp/sum/pow cria vários nós e arrays
+    temporários no caminho quente da atenção. Fundir tudo numa operação só,
+    com o Jacobiano-vetor analítico, reduz bastante o custo por passo.
+    """
+    z = x.data - x.data.max(axis=axis, keepdims=True)
+    e = np.exp(z)
+    s = e / e.sum(axis=axis, keepdims=True)
+
+    def backward(grad):
+        if x.requires_grad:
+            # regra do softmax: dx = s * (grad - sum(grad*s))
+            dot = (grad * s).sum(axis=axis, keepdims=True)
+            x._accumulate(s * (grad - dot))
+
+    return Tensor._result(s, (x,), backward)

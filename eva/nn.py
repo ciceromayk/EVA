@@ -12,7 +12,7 @@ import math
 
 import numpy as np
 
-from .autograd import Tensor, dropout, embedding, softmax
+from .autograd import Tensor, dropout, embedding, layer_norm, softmax
 
 
 class Module:
@@ -84,11 +84,7 @@ class LayerNorm(Module):
         self.beta = Tensor(np.zeros(dim, dtype=np.float32), requires_grad=True)
 
     def forward(self, x: Tensor) -> Tensor:
-        mean = x.mean(axis=-1, keepdims=True)
-        centered = x - mean
-        var = (centered * centered).mean(axis=-1, keepdims=True)
-        normalized = centered * (var + self.eps) ** -0.5
-        return normalized * self.gamma + self.beta
+        return layer_norm(x, self.gamma, self.beta, self.eps)
 
 
 class CausalSelfAttention(Module):
