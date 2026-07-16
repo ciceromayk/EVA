@@ -72,9 +72,13 @@ def train(args) -> None:
 
     tokenizer = CharTokenizer.from_text(text)
     data = np.array(tokenizer.encode(text), dtype=np.int64)
-    # separa os últimos 10% para validação (mede generalização, não decoreba)
-    split = int(len(data) * 0.9)
-    train_data, val_data = data[:split], data[split:]
+    # Split de validação intercalado: reserva 1 de cada 10 blocos contíguos.
+    # Como o corpus concatena livros distintos, um corte no fim isolaria um
+    # único domínio; intercalar faz a val cobrir a mesma mistura do treino.
+    chunk = args.block_size + 1
+    blocks = [data[i:i + chunk] for i in range(0, len(data) - chunk, chunk)]
+    train_data = np.concatenate([b for i, b in enumerate(blocks) if i % 10 != 0])
+    val_data = np.concatenate([b for i, b in enumerate(blocks) if i % 10 == 0])
     print(f"Corpus: {len(text):,} caracteres, vocabulário: {tokenizer.vocab_size}")
 
     config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
