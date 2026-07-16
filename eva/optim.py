@@ -7,9 +7,8 @@ decaimento de peso desacoplado (o "W" de AdamW).
 
 from __future__ import annotations
 
-import numpy as np
-
 from .autograd import Tensor
+from .backend import xp as np
 
 
 class AdamW:

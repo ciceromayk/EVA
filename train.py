@@ -15,12 +15,20 @@ import argparse
 import math
 import os
 import pickle
+import sys
 import time
 
-import numpy as np
+# O dispositivo (CPU/GPU) precisa ser escolhido ANTES de importar `eva`,
+# porque o backend de array é fixado no momento do import. Um pré-scan de
+# --device (ou a variável EVA_DEVICE) resolve isso.
+if "--device" in sys.argv:
+    os.environ["EVA_DEVICE"] = sys.argv[sys.argv.index("--device") + 1]
 
-from eva import AdamW, CharTokenizer, GPT, GPTConfig, clip_grad_norm, no_grad
-from eva.bpe import BPETokenizer
+import numpy as np  # noqa: E402  (numpy real, para preparar os dados na CPU)
+
+from eva import AdamW, CharTokenizer, GPT, GPTConfig, clip_grad_norm, no_grad  # noqa: E402
+from eva.backend import asnumpy, device_name, to_device  # noqa: E402
+from eva.bpe import BPETokenizer  # noqa: E402
 
 CKPT_PATH = "eva_checkpoint.pkl"
 
@@ -58,7 +66,9 @@ def deserialize_tokenizer(blob: dict):
 
 
 def save_checkpoint(model: GPT, tokenizer) -> None:
-    params = [p.data for p in model.parameters()]
+    # Salva os pesos como numpy (na CPU), para o arquivo funcionar em qualquer
+    # máquina, com ou sem GPU.
+    params = [asnumpy(p.data) for p in model.parameters()]
     with open(CKPT_PATH, "wb") as f:
         pickle.dump({"config": model.config, "params": params,
                      "tokenizer": serialize_tokenizer(tokenizer)}, f)
@@ -72,7 +82,7 @@ def load_checkpoint():
     tokenizer = deserialize_tokenizer(tok_blob)
     model = GPT(blob["config"])
     for p, saved in zip(model.parameters(), blob["params"]):
-        p.data = saved
+        p.data = to_device(saved)  # leva os pesos para o dispositivo atual
     return model, tokenizer
 
 
@@ -110,7 +120,7 @@ def train(args) -> None:
                        dropout=args.dropout)
     model = GPT(config)
     print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros "
-          f"| dropout {args.dropout}\n")
+          f"| dropout {args.dropout} | {device_name()}\n")
 
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     rng = np.random.default_rng(args.seed)
@@ -184,6 +194,8 @@ def main():
                         help="tamanho do vocabulário BPE (>= 256)")
     parser.add_argument("--dropout", type=float, default=0.1,
                         help="taxa de dropout (regularização; 0 desliga)")
+    parser.add_argument("--device", choices=["cpu", "gpu"], default="cpu",
+                        help="cpu (NumPy) ou gpu (CuPy/CUDA)")
     parser.add_argument("--steps", type=int, default=1500)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--block-size", type=int, default=None)

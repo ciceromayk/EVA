@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import contextlib
 
-import numpy as np
+from .backend import scatter_add
+from .backend import xp as np
 
 # Flag global: quando False, as operações não constroem o grafo
 # (equivalente ao torch.no_grad()). Útil na geração de texto.
@@ -207,7 +208,7 @@ class Tensor:
         def backward(grad):
             if self.requires_grad:
                 full = np.zeros_like(self.data)
-                np.add.at(full, idx, grad)
+                scatter_add(full, idx, grad)
                 self._accumulate(full)
 
         return Tensor._result(data, (self,), backward)
@@ -334,13 +335,14 @@ def embedding(weight: Tensor, idx: np.ndarray) -> Tensor:
     No backward, os gradientes são acumulados de volta nas linhas
     correspondentes (scatter-add), inclusive quando um índice se repete.
     """
+    idx = np.asarray(idx)  # garante que os índices estão no mesmo dispositivo
     data = weight.data[idx]
 
     def backward(grad):
         if weight.requires_grad:
             if weight.grad is None:
                 weight.grad = np.zeros_like(weight.data)
-            np.add.at(weight.grad, idx, grad)
+            scatter_add(weight.grad, idx, grad)
 
     return Tensor._result(data, (weight,), backward)
 

@@ -98,6 +98,7 @@ def start_training(opts: dict) -> tuple[bool, str]:
             "--tokenizer", str(opts.get("tokenizer", "char")),
             "--steps", str(int(opts.get("steps", 1500))),
             "--dropout", str(float(opts.get("dropout", 0.1))),
+            "--device", "gpu" if opts.get("device") == "gpu" else "cpu",
             "--log-every", "25",
         ]
         if opts.get("tokenizer") == "bpe":
@@ -427,6 +428,9 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
         <option value="bpe">bpe · subpalavras</option></select></div>
       <div><label>Ciclos (passos)</label><input type="number" id="steps" value="1000" min="100" step="100"></div>
       <div><label>Dropout</label><input type="number" id="dropout" value="0.1" min="0" max="0.9" step="0.05"></div>
+      <div><label>Processador</label><select id="device">
+        <option value="cpu">CPU</option>
+        <option value="gpu">GPU · CUDA</option></select></div>
     </div>
     <div style="margin-top:18px;display:flex;gap:11px">
       <button class="primary" id="btn-train">⚡ Iniciar treino</button>
@@ -524,7 +528,7 @@ $('#addtext').onclick=async()=>{
 
 $('#btn-train').onclick=async()=>{
   const body={preset:$('#preset').value,tokenizer:$('#tokenizer').value,
-    steps:$('#steps').value,dropout:$('#dropout').value,bpe_vocab:512};
+    steps:$('#steps').value,dropout:$('#dropout').value,device:$('#device').value,bpe_vocab:512};
   const j=await(await fetch('/train',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)})).json();flash('#train-msg',j.msg,j.ok);refresh();};
 $('#btn-stop').onclick=async()=>{

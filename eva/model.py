@@ -11,9 +11,11 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-import numpy as np
+import numpy as _np
 
 from .autograd import Tensor, cross_entropy, dropout, no_grad
+from .backend import asnumpy
+from .backend import xp as np
 from .nn import Block, Embedding, LayerNorm, Linear, Module
 
 
@@ -73,22 +75,23 @@ class GPT(Module):
     def generate(self, idx: np.ndarray, max_new_tokens: int, temperature: float = 1.0,
                  top_k: int | None = None, rng: np.random.Generator | None = None):
         """Gera `max_new_tokens` continuando a partir de `idx` (1, T)."""
-        rng = rng or np.random.default_rng()
-        idx = np.asarray(idx)
+        rng = rng or _np.random.default_rng()
+        idx = _np.asarray(idx)  # o histórico de tokens fica na CPU (é leve)
         for _ in range(max_new_tokens):
             context = idx[:, -self.config.block_size:]
             logits, _ = self.forward(context)
-            logits = logits.data[:, -1, :] / max(temperature, 1e-8)  # (1, vocab)
+            # a amostragem é feita na CPU (numpy): traz só a última linha
+            logits = asnumpy(logits.data[:, -1, :]) / max(temperature, 1e-8)
 
             if top_k is not None:
-                kth = np.sort(logits, axis=-1)[:, -top_k][:, None]
-                logits = np.where(logits < kth, -np.inf, logits)
+                kth = _np.sort(logits, axis=-1)[:, -top_k][:, None]
+                logits = _np.where(logits < kth, -_np.inf, logits)
 
             logits -= logits.max(axis=-1, keepdims=True)
-            probs = np.exp(logits)
+            probs = _np.exp(logits)
             probs /= probs.sum(axis=-1, keepdims=True)
             next_id = rng.choice(self.config.vocab_size, p=probs[0])
-            idx = np.concatenate([idx, [[next_id]]], axis=1)
+            idx = _np.concatenate([idx, [[next_id]]], axis=1)
         return idx
 
     def num_params(self) -> int:

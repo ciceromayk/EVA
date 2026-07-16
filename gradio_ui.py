@@ -62,10 +62,11 @@ def add_text(text):
     return stats_md(), ""
 
 
-def train_stream(preset, tokenizer, steps, dropout):
+def train_stream(preset, tokenizer, steps, dropout, device):
     ok, msg = app.start_training({
         "preset": preset, "tokenizer": tokenizer,
-        "steps": int(steps), "dropout": float(dropout), "bpe_vocab": 512,
+        "steps": int(steps), "dropout": float(dropout),
+        "device": device, "bpe_vocab": 512,
     })
     if not ok:
         yield msg
@@ -129,12 +130,13 @@ def build_demo() -> gr.Blocks:
             with gr.Row():
                 steps = gr.Slider(100, 3000, value=1000, step=100, label="Ciclos (passos)")
                 dropout = gr.Slider(0.0, 0.6, value=0.1, step=0.05, label="Dropout")
+                device = gr.Dropdown(["cpu", "gpu"], value="cpu", label="Processador (gpu = CUDA)")
             with gr.Row():
                 btn_train = gr.Button("⚡ Iniciar treino", variant="primary")
                 btn_stop = gr.Button("■ Parar")
             log = gr.Textbox(label="Fluxo neural", lines=14, max_lines=14,
                              value="> aguardando ativação…")
-            btn_train.click(train_stream, inputs=[preset, tokenizer, steps, dropout], outputs=log)
+            btn_train.click(train_stream, inputs=[preset, tokenizer, steps, dropout, device], outputs=log)
             btn_stop.click(stop_train, outputs=log)
 
         with gr.Tab("💬 Conversar"):

@@ -10,9 +10,8 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
-
 from .autograd import Tensor, dropout, embedding, layer_norm, softmax
+from .backend import xp as np
 
 
 class Module:

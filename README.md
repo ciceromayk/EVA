@@ -16,6 +16,7 @@ Tudo o que faz uma rede neural aprender está aqui e é legível:
 
 ```
 eva/
+  backend.py          seletor de array: NumPy (CPU) ou CuPy (GPU)
   autograd.py         motor de autograd (Tensor + backpropagation)
   nn.py               camadas: Linear, LayerNorm, atenção, MLP, Block
   model.py            o modelo GPT completo + geração de texto
@@ -25,6 +26,7 @@ app.py                painel web (http.server) para uso local / Render / Docker
 gradio_ui.py          mesma interface em Gradio (para o Hugging Face grátis)
 hf_space/             arquivos prontos para colar num Space Gradio
 train.py              script de treino e amostragem (com presets)
+check_gpu.py          autoteste de GPU (CPU vs CuPy)
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
 tests/                checagem numérica do autograd
@@ -51,6 +53,36 @@ No painel você pode:
 
 O material enviado fica em `materials/` e o corpus é montado a partir dele.
 Na primeira execução, o corpus atual é preservado como material inicial.
+
+## Rodar na GPU (NVIDIA / CUDA)
+
+A EVA é escrita sobre um "módulo de array" (`eva/backend.py`). Trocando
+NumPy por **CuPy**, o mesmo código roda na GPU — muito mais rápido. Ótimo
+para quem tem placa NVIDIA (ex.: RTX 5060).
+
+1. Tenha um **driver NVIDIA recente** instalado (para as placas mais novas,
+   série Blackwell/RTX 50, use o driver mais atual disponível).
+2. Instale o CuPy compatível com CUDA 12:
+   ```bash
+   pip install cupy-cuda12x
+   ```
+3. Confira se a GPU foi reconhecida e veja o ganho de velocidade:
+   ```bash
+   python check_gpu.py
+   ```
+4. Treine na GPU:
+   ```bash
+   python train.py --preset medium --tokenizer bpe --device gpu --steps 3000
+   ```
+   No painel web, escolha **Processador: GPU · CUDA**.
+
+Se a GPU não estiver disponível, a EVA **avisa e volta para a CPU**
+automaticamente — nada quebra. Como as placas RTX 50 são novas, caso o
+`cupy-cuda12x` reclame de arquitetura, atualize para a versão mais recente
+do CuPy (`pip install -U cupy-cuda12x`) e do driver.
+
+O checkpoint é salvo sempre em formato NumPy (CPU), então um modelo
+treinado na GPU também abre numa máquina só-CPU, e vice-versa.
 
 ## Rodar no iPad / celular (via Replit)
 
