@@ -5,3 +5,5 @@ eva_checkpoint.pkl
 .pytest_cache/
 .venv/
 venv/
+train_run.log
+*.log
