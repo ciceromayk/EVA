@@ -20,6 +20,7 @@ import time
 import numpy as np
 
 from eva import AdamW, CharTokenizer, GPT, GPTConfig, clip_grad_norm, no_grad
+from eva.bpe import BPETokenizer
 
 CKPT_PATH = "eva_checkpoint.pkl"
 
@@ -40,17 +41,34 @@ def get_batch(data: np.ndarray, block_size: int, batch_size: int, rng):
     return x, y
 
 
-def save_checkpoint(model: GPT, tokenizer: CharTokenizer) -> None:
+def serialize_tokenizer(tokenizer) -> dict:
+    """Empacota qualquer tokenizador (char ou BPE) para salvar no checkpoint."""
+    if isinstance(tokenizer, BPETokenizer):
+        merges = [[a, b, nid] for (a, b), nid in tokenizer.merges.items()]
+        return {"kind": "bpe", "merges": merges}
+    return {"kind": "char", "chars": tokenizer.chars}
+
+
+def deserialize_tokenizer(blob: dict):
+    if blob.get("kind") == "bpe":
+        merges = {(a, b): nid for a, b, nid in blob["merges"]}
+        return BPETokenizer(merges)
+    return CharTokenizer(blob["chars"])
+
+
+def save_checkpoint(model: GPT, tokenizer) -> None:
     params = [p.data for p in model.parameters()]
     with open(CKPT_PATH, "wb") as f:
         pickle.dump({"config": model.config, "params": params,
-                     "chars": tokenizer.chars}, f)
+                     "tokenizer": serialize_tokenizer(tokenizer)}, f)
 
 
 def load_checkpoint():
     with open(CKPT_PATH, "rb") as f:
         blob = pickle.load(f)
-    tokenizer = CharTokenizer(blob["chars"])
+    # compatível com checkpoints antigos que salvavam só "chars"
+    tok_blob = blob.get("tokenizer") or {"kind": "char", "chars": blob["chars"]}
+    tokenizer = deserialize_tokenizer(tok_blob)
     model = GPT(blob["config"])
     for p, saved in zip(model.parameters(), blob["params"]):
         p.data = saved
@@ -70,7 +88,11 @@ def train(args) -> None:
     with open(args.data, encoding="utf-8") as f:
         text = f.read()
 
-    tokenizer = CharTokenizer.from_text(text)
+    if args.tokenizer == "bpe":
+        print(f"Treinando tokenizador BPE (vocab {args.bpe_vocab})...")
+        tokenizer = BPETokenizer.train(text, vocab_size=args.bpe_vocab)
+    else:
+        tokenizer = CharTokenizer.from_text(text)
     data = np.array(tokenizer.encode(text), dtype=np.int64)
     # Split de validação intercalado: reserva 1 de cada 10 blocos contíguos.
     # Como o corpus concatena livros distintos, um corte no fim isolaria um
@@ -79,7 +101,8 @@ def train(args) -> None:
     blocks = [data[i:i + chunk] for i in range(0, len(data) - chunk, chunk)]
     train_data = np.concatenate([b for i, b in enumerate(blocks) if i % 10 != 0])
     val_data = np.concatenate([b for i, b in enumerate(blocks) if i % 10 == 0])
-    print(f"Corpus: {len(text):,} caracteres, vocabulário: {tokenizer.vocab_size}")
+    print(f"Corpus: {len(text):,} caracteres -> {len(data):,} tokens "
+          f"({args.tokenizer}, vocabulário {tokenizer.vocab_size})")
 
     config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
                        n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd)
@@ -143,6 +166,10 @@ def main():
     parser.add_argument("--data", default="data/corpus.txt")
     parser.add_argument("--preset", choices=list(PRESETS), default="medium",
                         help="tamanho do modelo (padrão: medium)")
+    parser.add_argument("--tokenizer", choices=["char", "bpe"], default="char",
+                        help="char (1 token/letra) ou bpe (subpalavras)")
+    parser.add_argument("--bpe-vocab", type=int, default=512,
+                        help="tamanho do vocabulário BPE (>= 256)")
     parser.add_argument("--steps", type=int, default=1500)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--block-size", type=int, default=None)

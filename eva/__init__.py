@@ -7,9 +7,11 @@ Pacote com todas as peças de um Transformer decoder estilo GPT:
 - `model`     : o modelo GPT completo, com geração de texto
 - `optim`     : otimizador AdamW e clipping de gradiente
 - `tokenizer` : tokenizador em nível de caractere
+- `bpe`       : tokenizador BPE (subpalavras), estilo GPT
 """
 
 from .autograd import Tensor, cross_entropy, no_grad, softmax
+from .bpe import BPETokenizer
 from .model import GPT, GPTConfig
 from .optim import AdamW, clip_grad_norm
 from .tokenizer import CharTokenizer
@@ -24,4 +26,5 @@ __all__ = [
     "AdamW",
     "clip_grad_norm",
     "CharTokenizer",
+    "BPETokenizer",
 ]
