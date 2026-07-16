@@ -21,15 +21,38 @@ eva/
   model.py            o modelo GPT completo + geração de texto
   optim.py            otimizador AdamW e clip de gradiente
   tokenizer.py        tokenizador em nível de caractere
+app.py                painel web para alimentar/treinar/gerar sem código
 train.py              script de treino e amostragem (com presets)
-tools/build_corpus.py extrai texto de PDFs para montar o corpus
+tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
 tests/                checagem numérica do autograd
 ```
 
-## Como usar
+## Painel web (a forma mais fácil)
 
-Requisito único: `numpy`.
+Uma interface local para você alimentar, treinar e conversar com a EVA
+**sem tocar em código** — só a biblioteca padrão do Python, nenhum
+framework:
+
+```bash
+pip install numpy pymupdf
+python app.py            # abre em http://localhost:8000
+```
+
+No painel você pode:
+
+- **Adicionar material** — arraste PDFs/TXT ou cole texto; o corpus é
+  reconstruído automaticamente (extração e limpeza inclusas)
+- **Treinar** — escolha tamanho, tokenizador, passos e dropout, e acompanhe
+  o progresso ao vivo
+- **Gerar texto** — dê um começo de frase e veja a EVA continuar
+
+O material enviado fica em `materials/` e o corpus é montado a partir dele.
+Na primeira execução, o corpus atual é preservado como material inicial.
+
+## Uso por linha de comando
+
+Requisito mínimo: `numpy` (e `pymupdf` para ler PDFs).
 
 ```bash
 pip install numpy

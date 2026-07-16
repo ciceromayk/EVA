@@ -7,3 +7,4 @@ eva_checkpoint.pkl
 venv/
 train_run.log
 *.log
+materials/

@@ -62,21 +62,27 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
-def build(paths: list[str]) -> str:
-    parts = []
-    for path in paths:
+def extract_file(path: str) -> str:
+    """Extrai e limpa o texto de um arquivo (.pdf ou .txt/.md)."""
+    if path.lower().endswith(".pdf"):
         pages = strip_repeated_lines(extract_pages(path))
-        parts.append(clean_text("\n".join(pages)))
-    return "\n\n".join(parts) + "\n"
+        return clean_text("\n".join(pages))
+    with open(path, encoding="utf-8", errors="replace") as f:
+        return clean_text(f.read())
+
+
+def build(paths: list[str]) -> str:
+    parts = [extract_file(path) for path in paths]
+    return "\n\n".join(p for p in parts if p) + "\n"
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Monta corpus a partir de PDFs")
-    parser.add_argument("pdfs", nargs="+", help="arquivos PDF de entrada")
+    parser = argparse.ArgumentParser(description="Monta corpus a partir de PDFs/TXT")
+    parser.add_argument("files", nargs="+", help="arquivos de entrada (.pdf ou .txt)")
     parser.add_argument("-o", "--output", default="data/corpus.txt")
     args = parser.parse_args()
 
-    corpus = build(args.pdfs)
+    corpus = build(args.files)
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(corpus)
 

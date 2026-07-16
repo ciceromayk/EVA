@@ -194,6 +194,8 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--generate", metavar="PROMPT",
                         help="gera texto a partir do checkpoint salvo e sai")
+    parser.add_argument("--max-new", type=int, default=300,
+                        help="tokens a gerar no modo --generate")
     args = parser.parse_args()
 
     # Preenche a arquitetura pelo preset; flags explícitas têm prioridade.
@@ -206,7 +208,7 @@ def main():
         if not os.path.exists(CKPT_PATH):
             raise SystemExit("Nenhum checkpoint encontrado. Treine primeiro.")
         model, tokenizer = load_checkpoint()
-        sample(model, tokenizer, prompt=args.generate, max_new_tokens=300)
+        sample(model, tokenizer, prompt=args.generate, max_new_tokens=args.max_new)
     else:
         train(args)
 
