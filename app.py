@@ -17,6 +17,8 @@ O material que você envia fica em `materials/`, e o corpus (`data/corpus.txt`)
 
 from __future__ import annotations
 
+import base64
+import hmac
 import json
 import os
 import subprocess
@@ -26,6 +28,9 @@ import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 BASE = os.path.dirname(os.path.abspath(__file__))
+# Se EVA_PASSWORD estiver definida, o painel exige login (usuário "eva").
+# Sem ela, roda aberto — apropriado só para uso 100% local (localhost).
+AUTH_PASSWORD = os.environ.get("EVA_PASSWORD", "")
 MATERIALS = os.path.join(BASE, "materials")
 CORPUS = os.path.join(BASE, "data", "corpus.txt")
 LOG = os.path.join(BASE, "train_run.log")
@@ -176,8 +181,37 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _authorized(self) -> bool:
+        """Confere usuário/senha (HTTP Basic Auth). Sem EVA_PASSWORD, libera tudo."""
+        if not AUTH_PASSWORD:
+            return True
+        header = self.headers.get("Authorization", "")
+        if not header.startswith("Basic "):
+            return False
+        try:
+            decoded = base64.b64decode(header[6:]).decode("utf-8")
+            user, _, pwd = decoded.partition(":")
+        except Exception:
+            return False
+        return user == "eva" and hmac.compare_digest(pwd, AUTH_PASSWORD)
+
+    def _require_auth(self) -> bool:
+        """Se não autorizado, envia o desafio de login e devolve False."""
+        if self._authorized():
+            return True
+        body = b"Autenticacao necessaria."
+        self.send_response(401)
+        self.send_header("WWW-Authenticate", 'Basic realm="EVA"')
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+        return False
+
     # ------------------------------------------------------------------
     def do_GET(self):
+        if not self._require_auth():
+            return
         path = urllib.parse.urlparse(self.path).path
         if path == "/":
             self._send(200, PAGE, "text/html; charset=utf-8")
@@ -204,6 +238,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, "não encontrado", "text/plain; charset=utf-8")
 
     def do_POST(self):
+        if not self._require_auth():
+            return
         path = urllib.parse.urlparse(self.path).path
         qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         try:
@@ -575,6 +611,11 @@ def main():
     seed_materials()
     server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
     print(f"\n  EVA · Painel de Estudo rodando em  http://localhost:{port}\n")
+    if AUTH_PASSWORD:
+        print("  🔒 Login exigido (usuário: eva). Seguro para acessar de fora.\n")
+    else:
+        print("  ⚠ Sem senha (EVA_PASSWORD não definida). Só acesse por")
+        print("    localhost — NÃO exponha assim para fora desta máquina.\n")
     print("  Abra no navegador. Ctrl+C para encerrar.\n")
     try:
         server.serve_forever()

@@ -8,3 +8,4 @@ venv/
 train_run.log
 *.log
 materials/
+senha_servidor.txt

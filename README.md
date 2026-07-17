@@ -27,6 +27,8 @@ gradio_ui.py          mesma interface em Gradio (para o Hugging Face grátis)
 hf_space/             arquivos prontos para colar num Space Gradio
 train.py              script de treino e amostragem (com presets)
 check_gpu.py          autoteste de GPU (CPU vs CuPy)
+servidor.bat          sobe a EVA com senha, pronta para acesso remoto
+instalar_inicializacao.bat   liga o servidor sozinho com o Windows
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
 tests/                checagem numérica do autograd
@@ -120,6 +122,74 @@ python.org e recrie o ambiente da EVA com ele (`py -3.12 -m pip install …`).
 
 O checkpoint é salvo sempre em formato NumPy (CPU), então um modelo
 treinado na GPU também abre numa máquina só-CPU, e vice-versa.
+
+## Transformar seu PC num servidor (treinar de qualquer lugar)
+
+Com uma GPU no PC, o mais poderoso é usar a própria máquina como servidor:
+liga em casa, treina/conversa de qualquer aparelho (iPad, celular, outro
+PC), sem depender de nuvem gratuita e seus limites. O caminho recomendado
+é o **Tailscale** — cria uma rede privada só entre os SEUS aparelhos, sem
+abrir portas no roteador e sem expor o PC para a internet toda.
+
+### 1. Instalar o Tailscale
+
+- No **PC** (o servidor): baixe em **https://tailscale.com/download** e
+  faça login (Google/Microsoft/GitHub — o que for mais rápido).
+- No **iPad/celular** (quem vai acessar): instale o app **Tailscale** na
+  App Store / Play Store e faça login **com a mesma conta**.
+
+Pronto — os dois aparelhos agora enxergam um ao outro com segurança,
+mesmo em redes diferentes (casa, 4G, wi-fi de outro lugar).
+
+### 2. Ligar o servidor da EVA
+
+Em vez do `iniciar.bat`, use:
+
+```
+servidor.bat
+```
+
+Na primeira vez, ele **gera uma senha aleatória** (mostrada na tela e
+salva em `senha_servidor.txt`, que não vai para o GitHub) e some o
+endereço Tailscale do PC.
+
+### 3. Acessar de qualquer lugar
+
+No navegador do iPad/celular, entre em:
+
+```
+http://<endereco-tailscale-do-pc>:8000
+```
+
+O endereço aparece ao rodar o `servidor.bat` (ex.: `100.x.y.z`), ou
+descubra a qualquer momento com `tailscale ip -4`. Ao abrir, o navegador
+vai pedir usuário e senha — use **eva** e a senha mostrada pelo script.
+
+### 4. (Opcional) Ligar sozinho com o Windows
+
+Para o PC virar servidor de verdade — sem precisar clicar em nada toda
+vez — rode **uma vez**:
+
+```
+instalar_inicializacao.bat
+```
+
+Isso faz o `servidor.bat` iniciar automaticamente quando o Windows liga.
+Para desfazer, rode `desinstalar_inicializacao.bat`.
+
+Vale também impedir o PC de dormir sozinho: **Configurações → Sistema →
+Energia e bateria → Tela e suspensão → "Nunca"** (pelo menos enquanto for
+usar como servidor).
+
+### Segurança em resumo
+
+- O painel só responde a login/senha quando `EVA_PASSWORD` está definida
+  (é o que o `servidor.bat` faz). Sem senha, ele roda aberto — use
+  `iniciar.bat` (sem senha) só em `localhost`, nunca exposto à rede.
+- O Tailscale mantém o acesso restrito aos aparelhos logados na sua conta
+  — ninguém de fora alcança o painel, mesmo sabendo o endereço.
+- Se algum dia quiser trocar a senha, apague `senha_servidor.txt` e rode
+  o `servidor.bat` de novo (ele gera outra).
 
 ## Rodar no iPad / celular (via Replit)
 
