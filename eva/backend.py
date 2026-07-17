@@ -36,11 +36,18 @@ def _init() -> None:
     if dev in ("gpu", "cuda"):
         try:
             import cupy as cp
-            float(cp.zeros(1).sum())  # confirma que a GPU realmente responde
+            # Exercita as libs realmente usadas no treino — random (curand) e
+            # matmul (cublas) — para detectar CUDA incompleto AGORA e cair para
+            # a CPU com elegância, em vez de quebrar no meio do treino.
+            a = cp.random.random(4).astype(cp.float32)
+            float((a @ a).sum())
             xp, _gpu = cp, True
             return
-        except Exception as exc:  # sem CuPy, sem CUDA, driver antigo, etc.
-            print(f"[EVA] GPU solicitada, mas indisponível ({exc}). Usando CPU.")
+        except Exception as exc:  # sem CuPy, CUDA incompleto, driver antigo…
+            print(f"[EVA] GPU solicitada, mas indisponível ({type(exc).__name__}). "
+                  "Usando CPU.")
+            print("[EVA] Faltam bibliotecas CUDA (ex.: curand). "
+                  "Veja o README, seção 'Rodar na GPU'.")
     xp, _gpu = _np, False
 
 

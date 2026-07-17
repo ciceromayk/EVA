@@ -95,9 +95,28 @@ para quem tem placa NVIDIA (ex.: RTX 5060).
    No painel web, escolha **Processador: GPU · CUDA**.
 
 Se a GPU não estiver disponível, a EVA **avisa e volta para a CPU**
-automaticamente — nada quebra. Como as placas RTX 50 são novas, caso o
-`cupy-cuda12x` reclame de arquitetura, atualize para a versão mais recente
-do CuPy (`pip install -U cupy-cuda12x`) e do driver.
+automaticamente — nada quebra.
+
+### Erro "curand*.dll não encontrado" / "CUDA path could not be detected"
+
+Isso significa que o CuPy instalou, mas faltam as **bibliotecas de runtime
+da CUDA**. Instale-as via pip (não precisa do CUDA Toolkit completo):
+
+```bash
+py -m pip install nvidia-cuda-runtime-cu12 nvidia-cublas-cu12 ^
+  nvidia-curand-cu12 nvidia-cusparse-cu12 nvidia-cusolver-cu12 ^
+  nvidia-cufft-cu12 nvidia-nvrtc-cu12
+py check_gpu.py
+```
+
+(No PowerShell, tudo numa linha só, sem o `^`.)
+
+### Se ainda falhar: cuidado com a versão do Python
+
+O ecossistema CUDA (CuPy e os pacotes `nvidia-*`) tem suporte mais estável
+no **Python 3.11 ou 3.12**. O Python 3.14 é muito novo e pode não ter os
+pacotes certos. Se o passo acima não resolver, instale o **Python 3.12** de
+python.org e recrie o ambiente da EVA com ele (`py -3.12 -m pip install …`).
 
 O checkpoint é salvo sempre em formato NumPy (CPU), então um modelo
 treinado na GPU também abre numa máquina só-CPU, e vice-versa.
