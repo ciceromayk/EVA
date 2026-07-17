@@ -160,6 +160,9 @@ def train(args) -> None:
         best_val = float("inf")
 
     start = time.time()
+    last_print = start
+    HEARTBEAT_SECS = 15  # em modelos lentos, avisa que está vivo mesmo
+                          # entre logs "oficiais" (que fazem validação)
 
     for step in range(1, args.steps + 1):
         # agendamento do learning rate: aquecimento linear e depois decaimento
@@ -182,9 +185,10 @@ def train(args) -> None:
         # pico de memória e pode estourar a RAM/VRAM.
         del loss
 
+        now = time.time()
         if step % args.log_every == 0 or step == 1:
             vloss = estimate_val_loss(model, val_data, config, args.batch_size, rng)
-            elapsed = time.time() - start
+            elapsed = now - start
             # Early stopping: guarda o checkpoint de MENOR val loss, não o
             # último — assim o overfitting no fim não estraga o resultado.
             best = ""
@@ -194,6 +198,15 @@ def train(args) -> None:
                 best = "  <- melhor (salvo)"
             print(f"passo {step:5d}/{args.steps} | treino {loss_value:.4f} "
                   f"| val {vloss:.4f} | {elapsed:6.1f}s{best}")
+            last_print = now
+        elif now - last_print >= HEARTBEAT_SECS:
+            # Passou muito tempo real sem uma linha "oficial" (comum em
+            # modelos grandes/lentos, onde log-every passos podem levar
+            # dezenas de minutos) — avisa que está vivo, sem gastar tempo
+            # com validação nem checkpoint.
+            print(f"passo {step:5d}/{args.steps} | treino {loss_value:.4f} "
+                  f"| ... (em andamento) | {now - start:6.1f}s")
+            last_print = now
 
     print(f"\nMelhor val loss: {best_val:.4f} | checkpoint em {CKPT_PATH}\n")
     # amostra usando o melhor modelo salvo (não o último, possivelmente overfit)
