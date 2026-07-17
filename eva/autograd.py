@@ -317,7 +317,13 @@ class Tensor:
         if len(axes) == 1 and isinstance(axes[0], (tuple, list)):
             axes = tuple(axes[0])
         data = self.data.transpose(axes)
-        inverse = tuple(np.argsort(axes))
+        # Permutação inversa calculada em Python puro (não em `xp`): `axes` é
+        # uma tupla de inteiros comuns, e o cupy.argsort exige um array de
+        # verdade (diferente do numpy, que aceita qualquer sequência).
+        inverse = [0] * len(axes)
+        for i, ax in enumerate(axes):
+            inverse[ax] = i
+        inverse = tuple(inverse)
 
         def backward(grad):
             if self.requires_grad:
