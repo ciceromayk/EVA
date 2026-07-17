@@ -21,6 +21,7 @@ import base64
 import hmac
 import json
 import os
+import pickle
 import subprocess
 import sys
 import threading
@@ -38,12 +39,17 @@ CKPT = os.path.join(BASE, "eva_checkpoint.pkl")
 ALLOWED_EXT = (".pdf", ".txt", ".md")
 
 sys.path.insert(0, BASE)
+from eva.model import GPT, GPTConfig  # noqa: E402
 from tools.build_corpus import build  # noqa: E402
 from tools.fetch_online_corpus import fetch_gutenberg, fetch_wikipedia  # noqa: E402
+from train import PRESETS  # noqa: E402
 
 # Estado do processo de treino em andamento (um por vez).
 _train_proc: subprocess.Popen | None = None
 _lock = threading.Lock()
+# Cache do resumo do checkpoint, invalidado quando o arquivo muda (evita
+# reler o .pkl inteiro a cada poll de /status).
+_ckpt_info_cache = {"mtime": None, "info": None}
 
 
 # ----------------------------------------------------------------------
@@ -76,6 +82,62 @@ def corpus_stats() -> dict:
     with open(CORPUS, encoding="utf-8") as f:
         text = f.read()
     return {"chars": len(text), "words": len(text.split()), "vocab": len(set(text))}
+
+
+def _size_fields(param_count: int) -> dict:
+    """Deriva tamanho em disco e uma estimativa de VRAM a partir da contagem
+    de parâmetros. Regra de bolso para o treino: pesos + gradiente + os dois
+    momentos do AdamW ≈ 4x os pesos (em float32), mais folga de ativações —
+    é uma estimativa, não uma medição real de uso de memória.
+    """
+    bytes_fp32 = param_count * 4
+    return {
+        "params": int(param_count),
+        "disk_mb": round(bytes_fp32 / (1024 * 1024), 2),
+        "vram_estimate_mb": round(bytes_fp32 * 4 / (1024 * 1024), 1),
+    }
+
+
+def estimate_model_info(preset: str, tokenizer_kind: str) -> dict:
+    """Estimativa do tamanho do modelo para um preset ainda não treinado,
+    usando o vocabulário real do corpus atual (char) ou o alvo do BPE (bpe).
+    """
+    cfg = PRESETS.get(preset, PRESETS["medium"])
+    vocab_size = 512 if tokenizer_kind == "bpe" else max(corpus_stats()["vocab"], 2)
+    config = GPTConfig(vocab_size=vocab_size, block_size=cfg["block_size"],
+                       n_layer=cfg["n_layer"], n_head=cfg["n_head"], n_embd=cfg["n_embd"])
+    params = GPT(config).num_params()
+    return {
+        **_size_fields(params),
+        "n_layer": config.n_layer, "n_head": config.n_head, "n_embd": config.n_embd,
+        "block_size": config.block_size, "vocab_size": vocab_size,
+        "tokenizer": tokenizer_kind, "source": "estimativa",
+    }
+
+
+def checkpoint_info() -> dict | None:
+    """Resumo real do cérebro salvo (arquitetura + parâmetros exatos), lido
+    direto do checkpoint — sem reconstruir o modelo. Cacheado por mtime do
+    arquivo, para não reler o .pkl inteiro a cada poll de status."""
+    if not os.path.exists(CKPT):
+        return None
+    mtime = os.path.getmtime(CKPT)
+    if _ckpt_info_cache["mtime"] == mtime:
+        return _ckpt_info_cache["info"]
+    with open(CKPT, "rb") as f:
+        blob = pickle.load(f)
+    config = blob["config"]
+    params = sum(p.size for p in blob["params"])
+    tok_kind = (blob.get("tokenizer") or {}).get("kind", "char")
+    info = {
+        **_size_fields(params),
+        "n_layer": config.n_layer, "n_head": config.n_head, "n_embd": config.n_embd,
+        "block_size": config.block_size, "vocab_size": config.vocab_size,
+        "tokenizer": tok_kind, "source": "cérebro salvo",
+    }
+    _ckpt_info_cache["mtime"] = mtime
+    _ckpt_info_cache["info"] = info
+    return info
 
 
 def safe_name(name: str) -> str:
@@ -230,6 +292,7 @@ class Handler(BaseHTTPRequestHandler):
                 "materials": list_materials(),
                 "training": training_active(),
                 "has_checkpoint": os.path.exists(CKPT),
+                "checkpoint_info": checkpoint_info(),
             })
         elif path == "/log":
             self._send(200, read_log(), "text/plain; charset=utf-8")
@@ -261,6 +324,16 @@ class Handler(BaseHTTPRequestHandler):
                     f.write(self._body())
                 stats = rebuild_corpus()
                 self._json({"ok": True, "msg": f"'{name}' adicionado.", "corpus": stats})
+
+            elif path == "/model_info":
+                data = json.loads(self._body() or b"{}")
+                preset = str(data.get("preset", "medium"))
+                tokenizer = str(data.get("tokenizer", "char"))
+                try:
+                    info = estimate_model_info(preset, tokenizer)
+                    self._json({"ok": True, "info": info})
+                except Exception as exc:
+                    self._json({"ok": False, "msg": f"Falha ao estimar: {exc}"}, 500)
 
             elif path == "/upload_model":
                 if training_active():
@@ -457,6 +530,17 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
 .checkrow input{width:auto;accent-color:var(--cyan);cursor:pointer}
 .checkrow span{font-size:14px}
 .archonly.dim{opacity:.35;pointer-events:none}
+.minfo{background:rgba(8,12,24,.55);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin:14px 0}
+.minfo-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;
+  color:var(--mut);margin-bottom:10px}
+.minfo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.minfo-grid div{display:flex;flex-direction:column}
+.minfo-grid b{font-size:17px;font-variant-numeric:tabular-nums;
+  background:linear-gradient(90deg,var(--cyan),var(--vio));-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.minfo-grid span{font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--mut)}
+.badge.real{background:rgba(124,246,122,.12);color:var(--lime);border-color:rgba(124,246,122,.4)}
 .foot{text-align:center;color:var(--mut);font-size:12px;padding:10px}
 </style></head>
 <body>
@@ -525,6 +609,21 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
     </div>
     <div class="hint" id="resume-hint" style="display:none">Continuando: usa a arquitetura, tokenizer e
       dropout do cérebro já salvo. Só "Ciclos" e "Processador" continuam valendo (acima).</div>
+
+    <div class="minfo" id="minfo">
+      <div class="minfo-head"><span>📐 Resumo do modelo</span><span class="badge" id="minfo-badge">estimativa</span></div>
+      <div class="minfo-grid">
+        <div><b id="mi-params">–</b><span>parâmetros</span></div>
+        <div><b id="mi-arch">–</b><span>camadas · cabeças · dim</span></div>
+        <div><b id="mi-ctx">–</b><span>contexto (tokens)</span></div>
+        <div><b id="mi-vocab">–</b><span>vocabulário</span></div>
+        <div><b id="mi-disk">–</b><span>tamanho em disco</span></div>
+        <div><b id="mi-vram">–</b><span>VRAM estimada</span></div>
+      </div>
+      <div class="hint">Estimativa aproximada (pesos + gradiente + momentos do AdamW); o uso real de
+        memória também depende do tamanho do lote e do corpus.</div>
+    </div>
+
     <div style="margin-top:18px;display:flex;gap:11px">
       <button class="primary" id="btn-train">⚡ Iniciar treino</button>
       <button class="ghost" id="btn-stop">■ Parar</button>
@@ -587,6 +686,8 @@ async function refresh(){
   $('#gen-hint').style.display=s.has_checkpoint?'none':'block';
   $('#resume').disabled=!s.has_checkpoint;
   if(!s.has_checkpoint)$('#resume').checked=false;
+  lastCkptInfo=s.checkpoint_info||null;
+  if($('#resume').checked) renderModelInfo(lastCkptInfo,true);
   updateResumeUI();
   if(s.training){
     const t=await(await fetch('/log')).text();
@@ -630,11 +731,40 @@ $('#btn-online').onclick=async()=>{
     body:JSON.stringify(body)})).json();
   flash('#online-msg',j.msg,j.ok);btn.disabled=false;if(j.ok)$('#onlinequery').value='';refresh();};
 
+let lastCkptInfo=null;
+
+function renderModelInfo(info,isReal){
+  const b=$('#minfo-badge');
+  if(!info){
+    ['#mi-params','#mi-arch','#mi-ctx','#mi-vocab','#mi-disk','#mi-vram'].forEach(id=>$(id).textContent='–');
+    b.textContent='sem dados';b.className='badge';return;
+  }
+  $('#mi-params').textContent=fmt(info.params);
+  $('#mi-arch').textContent=`${info.n_layer} · ${info.n_head} · ${info.n_embd}`;
+  $('#mi-ctx').textContent=fmt(info.block_size);
+  $('#mi-vocab').textContent=fmt(info.vocab_size);
+  $('#mi-disk').textContent=info.disk_mb+' MB';
+  $('#mi-vram').textContent='~'+info.vram_estimate_mb+' MB';
+  b.textContent=isReal?'cérebro salvo':'estimativa';
+  b.className='badge'+(isReal?' real':'');
+}
+
+async function fetchEstimate(){
+  if($('#resume').checked)return;  // no modo continuar, quem manda é o cérebro real
+  const j=await(await fetch('/model_info',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({preset:$('#preset').value,tokenizer:$('#tokenizer').value})})).json();
+  if(j.ok)renderModelInfo(j.info,false);
+}
+$('#preset').onchange=fetchEstimate;
+$('#tokenizer').onchange=fetchEstimate;
+
 function updateResumeUI(){
   const resuming=$('#resume').checked;
   document.querySelectorAll('.archonly').forEach(el=>el.classList.toggle('dim',resuming));
   document.querySelectorAll('.archonly select,.archonly input').forEach(el=>el.disabled=resuming);
   $('#resume-hint').style.display=resuming?'block':'none';
+  if(resuming)renderModelInfo(lastCkptInfo,true);
+  else fetchEstimate();
 }
 $('#resume').onchange=updateResumeUI;
 
@@ -663,7 +793,7 @@ $('#modelfile').onchange=async()=>{
   const j=await(await fetch('/upload_model',{method:'POST',body:f})).json();
   flash('#model-msg',j.msg,j.ok);refresh();};
 
-refresh();setInterval(refresh,2000);
+refresh();fetchEstimate();setInterval(refresh,2000);
 </script>
 </body></html>"""
 

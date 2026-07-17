@@ -325,6 +325,13 @@ ricos, mas exigem mais tempo de CPU:
 Para experimentar rápido, use `nano` ou `small`. O painel web já vem com
 `small` selecionado por padrão.
 
+No painel, o cartão **📐 Resumo do modelo** mostra ao vivo — conforme você
+troca o preset/percepção — os parâmetros, arquitetura, contexto,
+vocabulário, tamanho em disco e VRAM estimada daquela escolha (badge
+"estimativa"). Ao marcar **🔄 Continuar do cérebro salvo**, o cartão troca
+para os números **reais** do checkpoint (badge "cérebro salvo"), já que
+nesse modo é a arquitetura salva que manda, não o preset selecionado.
+
 ```bash
 python train.py --preset large --steps 2000
 ```
