@@ -9,6 +9,9 @@ echo ============================================
 echo.
 py -3.12 -m pip install numpy pymupdf cupy-cuda12x
 echo.
+echo Instalando as bibliotecas de runtime da CUDA (curand, cublas, etc.)...
+py -3.12 -m pip install nvidia-cuda-runtime-cu12 nvidia-cublas-cu12 nvidia-curand-cu12 nvidia-cusparse-cu12 nvidia-cusolver-cu12 nvidia-cufft-cu12 nvidia-nvrtc-cu12 nvidia-cuda-nvrtc-cu12
+echo.
 echo ============================================
 echo  Testando a GPU...
 echo ============================================

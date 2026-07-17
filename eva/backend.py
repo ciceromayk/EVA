@@ -30,11 +30,38 @@ def device_name() -> str:
     return "GPU (CuPy)" if _gpu else "CPU (NumPy)"
 
 
+def _register_cuda_dlls() -> None:
+    """No Windows, ensina o CuPy a achar as DLLs da CUDA instaladas via pip.
+
+    Os pacotes `nvidia-*-cu12` colocam as DLLs em
+    site-packages/nvidia/<lib>/bin, um lugar que o Windows não procura por
+    padrão. Sem isto, o CuPy falha com "curand*.dll não encontrado" mesmo
+    com tudo instalado. `os.add_dll_directory` resolve.
+    """
+    if os.name != "nt" or not hasattr(os, "add_dll_directory"):
+        return
+    try:
+        import nvidia
+    except Exception:
+        return
+    for root in getattr(nvidia, "__path__", []):
+        if not os.path.isdir(root):
+            continue
+        for lib in os.listdir(root):
+            binp = os.path.join(root, lib, "bin")
+            if os.path.isdir(binp):
+                try:
+                    os.add_dll_directory(binp)
+                except OSError:
+                    pass
+
+
 def _init() -> None:
     global xp, _gpu
     dev = os.environ.get("EVA_DEVICE", "cpu").lower()
     if dev in ("gpu", "cuda"):
         try:
+            _register_cuda_dlls()
             import cupy as cp
             # Exercita as libs realmente usadas no treino — random (curand) e
             # matmul (cublas) — para detectar CUDA incompleto AGORA e cair para
