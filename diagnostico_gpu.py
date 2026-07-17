@@ -9,6 +9,13 @@ import sys
 
 print("=" * 60)
 print("Python:", sys.version.split()[0], "|", sys.executable)
+print("PYTHONPATH:", os.environ.get("PYTHONPATH", "(vazio)"))
+# Mostra de onde o CuPy vai ser carregado — revela mistura de versoes
+try:
+    import cupy as _c
+    print("cupy carregado de:", os.path.dirname(_c.__file__))
+except Exception as _e:
+    print("cupy ainda nao importavel:", type(_e).__name__)
 print("=" * 60)
 
 # 1) Os pacotes nvidia-* foram instalados? Onde estão as DLLs?
