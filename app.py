@@ -39,7 +39,7 @@ CKPT = os.path.join(BASE, "eva_checkpoint.pkl")
 ALLOWED_EXT = (".pdf", ".txt", ".md")
 
 sys.path.insert(0, BASE)
-from eva.model import GPT, GPTConfig  # noqa: E402
+from eva.model import GPTConfig  # noqa: E402
 from tools.build_corpus import build  # noqa: E402
 from tools.fetch_online_corpus import fetch_gutenberg, fetch_wikipedia  # noqa: E402
 from train import PRESETS  # noqa: E402
@@ -108,6 +108,20 @@ def _size_fields(param_count: int, optimizer: str = "adamw", batch_size: int = 1
     }
 
 
+def _gpt_param_count(vocab_size: int, block_size: int, n_layer: int, n_embd: int) -> int:
+    """Conta os parâmetros de um GPT ANALITICAMENTE (sem construir o modelo).
+
+    Construir um GPT de verdade só para chamar .num_params() aloca todos os
+    pesos (para o preset xlarge, ~1,2GB e ~9-10s no CPU) — caro demais para
+    uma estimativa que o painel pede a cada troca de preset. A fórmula
+    replica exatamente a arquitetura de eva/nn.py e eva/model.py:
+    embeddings de token+posição, por camada (LayerNorm x2, atenção
+    qkv+proj, MLP fc+proj), LayerNorm final e a cabeça de saída.
+    """
+    per_layer = 12 * n_embd * n_embd + 13 * n_embd
+    return (2 * vocab_size * n_embd) + (block_size * n_embd) + n_layer * per_layer + 2 * n_embd
+
+
 def estimate_model_info(preset: str, tokenizer_kind: str, optimizer: str = "adamw") -> dict:
     """Estimativa do tamanho do modelo para um preset ainda não treinado,
     usando o vocabulário real do corpus atual (char) ou o alvo do BPE (bpe).
@@ -116,7 +130,7 @@ def estimate_model_info(preset: str, tokenizer_kind: str, optimizer: str = "adam
     vocab_size = 512 if tokenizer_kind == "bpe" else max(corpus_stats()["vocab"], 2)
     config = GPTConfig(vocab_size=vocab_size, block_size=cfg["block_size"],
                        n_layer=cfg["n_layer"], n_head=cfg["n_head"], n_embd=cfg["n_embd"])
-    params = GPT(config).num_params()
+    params = _gpt_param_count(vocab_size, cfg["block_size"], cfg["n_layer"], cfg["n_embd"])
     return {
         **_size_fields(params, optimizer, cfg["batch_size"], cfg["block_size"],
                        cfg["n_layer"], cfg["n_embd"]),
@@ -709,8 +723,7 @@ async function refresh(){
   $('#resume').disabled=!s.has_checkpoint;
   if(!s.has_checkpoint)$('#resume').checked=false;
   lastCkptInfo=s.checkpoint_info||null;
-  if($('#resume').checked) renderModelInfo(lastCkptInfo,true);
-  updateResumeUI();
+  applyResumeVisualState();
   if(s.training){
     const t=await(await fetch('/log')).text();
     const el=$('#log');el.textContent=t||'> iniciando…';el.scrollTop=el.scrollHeight;
@@ -782,15 +795,22 @@ $('#preset').onchange=fetchEstimate;
 $('#tokenizer').onchange=fetchEstimate;
 $('#optimizer').onchange=fetchEstimate;
 
-function updateResumeUI(){
+// Só mexe em CSS/estado visual (sem chamar o servidor) — seguro de rodar
+// a cada poll de refresh(). Buscar uma nova estimativa (fetchEstimate) só
+// acontece em resposta a uma mudança de verdade do usuário, nunca no
+// polling periódico — senão, em presets grandes (ex.: xlarge), cada poll
+// dispararia uma reconstrução cara do modelo e sufocaria o treino real.
+function applyResumeVisualState(){
   const resuming=$('#resume').checked;
   document.querySelectorAll('.archonly').forEach(el=>el.classList.toggle('dim',resuming));
   document.querySelectorAll('.archonly select,.archonly input').forEach(el=>el.disabled=resuming);
   $('#resume-hint').style.display=resuming?'block':'none';
   if(resuming)renderModelInfo(lastCkptInfo,true);
-  else fetchEstimate();
 }
-$('#resume').onchange=updateResumeUI;
+$('#resume').onchange=()=>{
+  applyResumeVisualState();
+  if(!$('#resume').checked)fetchEstimate();
+};
 
 $('#btn-train').onclick=async()=>{
   const resume=$('#resume').checked;
