@@ -14,7 +14,7 @@ CORPUS = "A EVA aprende com o material que voce fornecer. " * 40
 def make_args(data_path, resume=False, steps=20, seed=0):
     return argparse.Namespace(
         data=data_path, preset="nano", tokenizer="char", bpe_vocab=256,
-        dropout=0.0, device="cpu", resume=resume, steps=steps,
+        dropout=0.0, device="cpu", optimizer="adamw", resume=resume, steps=steps,
         batch_size=8, block_size=32, n_layer=1, n_head=1, n_embd=16,
         lr=3e-3, log_every=10, seed=seed, generate=None, max_new=10,
     )

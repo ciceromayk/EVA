@@ -30,7 +30,7 @@ instalar_inicializacao.bat   liga o servidor sozinho com o Windows
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 tools/fetch_online_corpus.py busca texto da Wikipédia / Project Gutenberg
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
-tests/                checagem numérica do autograd, BPE e treino incremental
+tests/                autograd, BPE, treino incremental e vazamento de memória
 ```
 
 ## Manter a EVA atualizada (Windows)
@@ -315,12 +315,13 @@ PYTHONPATH=. python tests/test_autograd.py
 Escolha o tamanho com `--preset`. Modelos maiores aprendem padrões mais
 ricos, mas exigem mais tempo de CPU:
 
-| preset   | parâmetros | camadas | contexto | velocidade relativa |
-|----------|-----------:|:-------:|:--------:|:-------------------:|
-| `nano`   |    ~100 mil |    2    |    48    |  relâmpago          |
-| `small`  |    ~350 mil |    3    |    64    |  ~4x mais rápido    |
-| `medium` |    ~1,8 mi  |    4    |    96    |  base               |
-| `large`  |    ~4,8 mi  |    6    |   128    |  ~4x mais lento     |
+| preset    | parâmetros | camadas | contexto | velocidade relativa      |
+|-----------|-----------:|:-------:|:--------:|:------------------------:|
+| `nano`    |    ~100 mil |    2    |    48    |  relâmpago               |
+| `small`   |    ~350 mil |    3    |    64    |  ~4x mais rápido         |
+| `medium`  |    ~1,8 mi  |    4    |    96    |  base                    |
+| `large`   |    ~4,8 mi  |    6    |   128    |  ~4x mais lento          |
+| `xlarge`  |    ~304 mi  |   24    |   256    |  exige GPU com ~6-8GB+   |
 
 Para experimentar rápido, use `nano` ou `small`. O painel web já vem com
 `small` selecionado por padrão.
@@ -339,6 +340,38 @@ python train.py --preset large --steps 2000
 Também dá para sobrescrever qualquer dimensão individual
 (`--n-layer`, `--n-head`, `--n-embd`, `--block-size`, `--batch-size`).
 
+### Quanto dá para treinar no seu hardware (e por que 1 bilhão não cabe)
+
+Treinar (diferente de só *rodar*) um modelo em fp32 exige guardar, **por
+parâmetro**: o peso, o gradiente, e o estado do otimizador.
+
+- **AdamW** (padrão): peso + gradiente + 2 momentos = **16 bytes/parâmetro**
+- **SGD+momentum** (`--optimizer sgd`): peso + gradiente + 1 buffer =
+  **12 bytes/parâmetro** (~25% mais leve — cabe modelo maior na mesma GPU)
+
+Para **1 bilhão de parâmetros**, isso são **16 GB só de peso+gradiente+
+otimizador**, em fp32 — antes de contar as ativações. Numa GPU de 8GB, **1
+bi não cabe pra treinar em nenhuma combinação de otimizações de código**:
+mesmo em fp16 puro (arriscado, tende a divergir sem os truques que
+frameworks como PyTorch usam), ainda são ~8GB só de estado do otimizador,
+sem sobrar nada para ativações. Isso é física de memória, não é algo que
+se resolve otimizando o autograd.
+
+**Teto realista para treinar 100% local** numa GPU de 8GB: o preset
+`xlarge` (~304 milhões de parâmetros) usa cerca de 5,6GB com AdamW ou
+4,3GB com SGD+momentum — cabe com folga. Empurrar além disso (rumo a 1 bi)
+esbarra na parede de memória acima.
+
+**Se 1 bilhão for mesmo a meta**: o caminho é treinar numa GPU maior
+alugada na nuvem (ex.: uma A100/H100, só para o treino), e depois baixar o
+checkpoint para rodar localmente. **Inferência** (gerar texto, sem
+gradiente/otimizador) de 1 bi de parâmetros precisa de só ~4GB — isso
+**cabe tranquilo** numa RTX 5060. O gargalo é treinar, não conversar.
+
+O cartão **📐 Resumo do modelo** no painel já mostra a VRAM estimada antes
+de você clicar em treinar — se aparecer um número maior que sua placa,
+é sinal para escolher um preset menor ou trocar para SGD+momentum.
+
 ### Tokenizador e regularização
 
 ```bash
@@ -349,6 +382,8 @@ python train.py --tokenizer bpe --bpe-vocab 512 --dropout 0.2 --steps 2000
 - `--tokenizer {char,bpe}`: caractere (padrão) ou subpalavras
 - `--bpe-vocab N`: tamanho do vocabulário BPE (≥ 256)
 - `--dropout P`: taxa de dropout (regularização; padrão 0,1)
+- `--optimizer {adamw,sgd}`: AdamW (padrão, converge melhor) ou SGD+momentum
+  (~25% mais leve em memória — ver seção acima sobre limites de hardware)
 
 O treino salva sempre o checkpoint de **menor loss de validação** (early
 stopping), então o overfitting no fim não estraga o modelo final.

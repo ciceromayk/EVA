@@ -5,7 +5,7 @@ Pacote com todas as peças de um Transformer decoder estilo GPT:
 - `autograd`  : motor de diferenciação automática (backpropagation)
 - `nn`        : camadas (Linear, LayerNorm, atenção, MLP, blocos)
 - `model`     : o modelo GPT completo, com geração de texto
-- `optim`     : otimizador AdamW e clipping de gradiente
+- `optim`     : otimizadores (AdamW, SGDMomentum) e clipping de gradiente
 - `tokenizer` : tokenizador em nível de caractere
 - `bpe`       : tokenizador BPE (subpalavras), estilo GPT
 """
@@ -13,7 +13,7 @@ Pacote com todas as peças de um Transformer decoder estilo GPT:
 from .autograd import Tensor, cross_entropy, no_grad, softmax
 from .bpe import BPETokenizer
 from .model import GPT, GPTConfig
-from .optim import AdamW, clip_grad_norm
+from .optim import AdamW, SGDMomentum, clip_grad_norm
 from .tokenizer import CharTokenizer
 
 __all__ = [
@@ -24,6 +24,7 @@ __all__ = [
     "GPT",
     "GPTConfig",
     "AdamW",
+    "SGDMomentum",
     "clip_grad_norm",
     "CharTokenizer",
     "BPETokenizer",

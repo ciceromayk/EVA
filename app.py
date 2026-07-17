@@ -84,21 +84,31 @@ def corpus_stats() -> dict:
     return {"chars": len(text), "words": len(text.split()), "vocab": len(set(text))}
 
 
-def _size_fields(param_count: int) -> dict:
+# bytes/parâmetro para pesos+gradiente+estado do otimizador, em float32:
+# AdamW guarda 2 momentos (16 = 4 peso + 4 grad + 4 + 4); SGD+momentum só 1
+# buffer (12 = 4 + 4 + 4) — ~25% mais leve, cabe modelo maior na mesma VRAM.
+_OPTIM_BYTES_PER_PARAM = {"adamw": 16, "sgd": 12}
+
+
+def _size_fields(param_count: int, optimizer: str = "adamw", batch_size: int = 16,
+                  block_size: int = 64, n_layer: int = 4, n_embd: int = 192) -> dict:
     """Deriva tamanho em disco e uma estimativa de VRAM a partir da contagem
-    de parâmetros. Regra de bolso para o treino: pesos + gradiente + os dois
-    momentos do AdamW ≈ 4x os pesos (em float32), mais folga de ativações —
-    é uma estimativa, não uma medição real de uso de memória.
+    de parâmetros + hiperparâmetros de treino. É uma estimativa (regra de
+    bolso), não uma medição real: pesos+gradiente+otimizador é exato; a
+    parcela de ativações usa uma heurística (~10 tensores do tamanho
+    lote×contexto×dimensão por camada, sem gradient checkpointing).
     """
     bytes_fp32 = param_count * 4
+    optim_bytes = param_count * _OPTIM_BYTES_PER_PARAM.get(optimizer, 16)
+    activation_bytes = batch_size * block_size * n_embd * n_layer * 4 * 10
     return {
         "params": int(param_count),
         "disk_mb": round(bytes_fp32 / (1024 * 1024), 2),
-        "vram_estimate_mb": round(bytes_fp32 * 4 / (1024 * 1024), 1),
+        "vram_estimate_mb": round((optim_bytes + activation_bytes) / (1024 * 1024), 1),
     }
 
 
-def estimate_model_info(preset: str, tokenizer_kind: str) -> dict:
+def estimate_model_info(preset: str, tokenizer_kind: str, optimizer: str = "adamw") -> dict:
     """Estimativa do tamanho do modelo para um preset ainda não treinado,
     usando o vocabulário real do corpus atual (char) ou o alvo do BPE (bpe).
     """
@@ -108,17 +118,21 @@ def estimate_model_info(preset: str, tokenizer_kind: str) -> dict:
                        n_layer=cfg["n_layer"], n_head=cfg["n_head"], n_embd=cfg["n_embd"])
     params = GPT(config).num_params()
     return {
-        **_size_fields(params),
+        **_size_fields(params, optimizer, cfg["batch_size"], cfg["block_size"],
+                       cfg["n_layer"], cfg["n_embd"]),
         "n_layer": config.n_layer, "n_head": config.n_head, "n_embd": config.n_embd,
         "block_size": config.block_size, "vocab_size": vocab_size,
-        "tokenizer": tokenizer_kind, "source": "estimativa",
+        "tokenizer": tokenizer_kind, "optimizer": optimizer, "source": "estimativa",
     }
 
 
 def checkpoint_info() -> dict | None:
     """Resumo real do cérebro salvo (arquitetura + parâmetros exatos), lido
     direto do checkpoint — sem reconstruir o modelo. Cacheado por mtime do
-    arquivo, para não reler o .pkl inteiro a cada poll de status."""
+    arquivo, para não reler o .pkl inteiro a cada poll de status. A parcela
+    de VRAM assume AdamW e o batch_size padrão do "medium" (o que
+    --resume usa quando nenhum --preset é passado) — é só uma referência.
+    """
     if not os.path.exists(CKPT):
         return None
     mtime = os.path.getmtime(CKPT)
@@ -129,11 +143,13 @@ def checkpoint_info() -> dict | None:
     config = blob["config"]
     params = sum(p.size for p in blob["params"])
     tok_kind = (blob.get("tokenizer") or {}).get("kind", "char")
+    assumed_batch = PRESETS["medium"]["batch_size"]
     info = {
-        **_size_fields(params),
+        **_size_fields(params, "adamw", assumed_batch, config.block_size,
+                       config.n_layer, config.n_embd),
         "n_layer": config.n_layer, "n_head": config.n_head, "n_embd": config.n_embd,
         "block_size": config.block_size, "vocab_size": config.vocab_size,
-        "tokenizer": tok_kind, "source": "cérebro salvo",
+        "tokenizer": tok_kind, "optimizer": "adamw", "source": "cérebro salvo",
     }
     _ckpt_info_cache["mtime"] = mtime
     _ckpt_info_cache["info"] = info
@@ -167,6 +183,7 @@ def start_training(opts: dict) -> tuple[bool, str]:
             sys.executable, os.path.join(BASE, "train.py"),
             "--steps", str(int(opts.get("steps", 1500))),
             "--device", "gpu" if opts.get("device") == "gpu" else "cpu",
+            "--optimizer", "sgd" if opts.get("optimizer") == "sgd" else "adamw",
             "--log-every", "25",
         ]
         if resume:
@@ -329,8 +346,9 @@ class Handler(BaseHTTPRequestHandler):
                 data = json.loads(self._body() or b"{}")
                 preset = str(data.get("preset", "medium"))
                 tokenizer = str(data.get("tokenizer", "char"))
+                optimizer = str(data.get("optimizer", "adamw"))
                 try:
-                    info = estimate_model_info(preset, tokenizer)
+                    info = estimate_model_info(preset, tokenizer, optimizer)
                     self._json({"ok": True, "info": info})
                 except Exception as exc:
                     self._json({"ok": False, "msg": f"Falha ao estimar: {exc}"}, 500)
@@ -597,18 +615,22 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
         <option value="nano">nano · relâmpago</option>
         <option value="small" selected>small · rápido</option>
         <option value="medium">medium · esperto</option>
-        <option value="large">large · lento</option></select></div>
+        <option value="large">large · lento</option>
+        <option value="xlarge">xlarge · ~300M (GPU forte)</option></select></div>
       <div class="archonly"><label>Percepção</label><select id="tokenizer">
         <option value="char">char · letra a letra</option>
         <option value="bpe">bpe · subpalavras</option></select></div>
       <div><label>Ciclos (passos)</label><input type="number" id="steps" value="1000" min="100" step="100"></div>
       <div class="archonly"><label>Dropout</label><input type="number" id="dropout" value="0.1" min="0" max="0.9" step="0.05"></div>
+      <div><label>Otimizador</label><select id="optimizer">
+        <option value="adamw">AdamW · converge melhor</option>
+        <option value="sgd">SGD+momentum · ~25% mais leve</option></select></div>
       <div><label>Processador</label><select id="device">
         <option value="cpu">CPU</option>
         <option value="gpu">GPU · CUDA</option></select></div>
     </div>
     <div class="hint" id="resume-hint" style="display:none">Continuando: usa a arquitetura, tokenizer e
-      dropout do cérebro já salvo. Só "Ciclos" e "Processador" continuam valendo (acima).</div>
+      dropout do cérebro já salvo. "Ciclos", "Otimizador" e "Processador" continuam valendo (acima).</div>
 
     <div class="minfo" id="minfo">
       <div class="minfo-head"><span>📐 Resumo do modelo</span><span class="badge" id="minfo-badge">estimativa</span></div>
@@ -752,11 +774,13 @@ function renderModelInfo(info,isReal){
 async function fetchEstimate(){
   if($('#resume').checked)return;  // no modo continuar, quem manda é o cérebro real
   const j=await(await fetch('/model_info',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({preset:$('#preset').value,tokenizer:$('#tokenizer').value})})).json();
+    body:JSON.stringify({preset:$('#preset').value,tokenizer:$('#tokenizer').value,
+      optimizer:$('#optimizer').value})})).json();
   if(j.ok)renderModelInfo(j.info,false);
 }
 $('#preset').onchange=fetchEstimate;
 $('#tokenizer').onchange=fetchEstimate;
+$('#optimizer').onchange=fetchEstimate;
 
 function updateResumeUI(){
   const resuming=$('#resume').checked;
@@ -772,7 +796,7 @@ $('#btn-train').onclick=async()=>{
   const resume=$('#resume').checked;
   const body={preset:$('#preset').value,tokenizer:$('#tokenizer').value,
     steps:$('#steps').value,dropout:$('#dropout').value,device:$('#device').value,
-    bpe_vocab:512,resume};
+    optimizer:$('#optimizer').value,bpe_vocab:512,resume};
   const j=await(await fetch('/train',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)})).json();flash('#train-msg',j.msg,j.ok);refresh();};
 $('#btn-stop').onclick=async()=>{

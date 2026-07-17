@@ -46,6 +46,37 @@ class AdamW:
             p.grad = None
 
 
+class SGDMomentum:
+    """SGD com momentum e decaimento de peso: 1 buffer por parâmetro (12
+    bytes/param no total: peso+gradiente+velocidade) contra os 16 bytes/param
+    do AdamW (peso+gradiente+dois momentos). Converge um pouco mais devagar,
+    mas cabe ~25% mais parâmetros na mesma VRAM — a troca certa quando o
+    limite é memória, não velocidade de convergência.
+    """
+
+    def __init__(self, params: list[Tensor], lr: float = 1e-2, momentum: float = 0.9,
+                 weight_decay: float = 0.01):
+        self.params = list(params)
+        self.lr = lr
+        self.momentum = momentum
+        self.weight_decay = weight_decay
+        self.velocity = [np.zeros_like(p.data) for p in self.params]
+
+    def step(self) -> None:
+        for i, p in enumerate(self.params):
+            if p.grad is None:
+                continue
+            g = p.grad
+            if self.weight_decay:
+                p.data -= self.lr * self.weight_decay * p.data
+            self.velocity[i] = self.momentum * self.velocity[i] + g
+            p.data -= self.lr * self.velocity[i]
+
+    def zero_grad(self) -> None:
+        for p in self.params:
+            p.grad = None
+
+
 def clip_grad_norm(params: list[Tensor], max_norm: float) -> float:
     """Recorta o gradiente global para estabilizar o treino. Retorna a norma."""
     total = 0.0

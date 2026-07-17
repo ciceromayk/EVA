@@ -26,19 +26,22 @@ if "--device" in sys.argv:
 
 import numpy as np  # noqa: E402  (numpy real, para preparar os dados na CPU)
 
-from eva import AdamW, CharTokenizer, GPT, GPTConfig, clip_grad_norm, no_grad  # noqa: E402
+from eva import AdamW, CharTokenizer, GPT, GPTConfig, SGDMomentum, clip_grad_norm, no_grad  # noqa: E402
 from eva.backend import asnumpy, device_name, to_device  # noqa: E402
 from eva.bpe import BPETokenizer  # noqa: E402
 
 CKPT_PATH = "eva_checkpoint.pkl"
 
-# Presets de arquitetura. "medium" e "large" são os "modelos maiores":
-# aprendem estruturas mais ricas do corpus, ao custo de mais tempo de CPU.
+# Presets de arquitetura. Cada um sobe o tamanho do modelo — mais capacidade
+# de aprender, ao custo de mais tempo/memória. "xlarge" (~300M parâmetros)
+# é o teto realista para treinar por inteiro numa GPU de 8GB (ver README,
+# seção "Quanto dá para treinar no seu hardware").
 PRESETS = {
-    "nano":   dict(n_layer=2, n_head=2, n_embd=64,  block_size=48,  batch_size=16),
-    "small":  dict(n_layer=3, n_head=4, n_embd=96,  block_size=64,  batch_size=16),
-    "medium": dict(n_layer=4, n_head=6, n_embd=192, block_size=96,  batch_size=16),
-    "large":  dict(n_layer=6, n_head=8, n_embd=256, block_size=128, batch_size=12),
+    "nano":   dict(n_layer=2,  n_head=2,  n_embd=64,   block_size=48,  batch_size=16),
+    "small":  dict(n_layer=3,  n_head=4,  n_embd=96,   block_size=64,  batch_size=16),
+    "medium": dict(n_layer=4,  n_head=6,  n_embd=192,  block_size=96,  batch_size=16),
+    "large":  dict(n_layer=6,  n_head=8,  n_embd=256,  block_size=128, batch_size=12),
+    "xlarge": dict(n_layer=24, n_head=16, n_embd=1024, block_size=256, batch_size=4),
 }
 
 
@@ -140,7 +143,10 @@ def train(args) -> None:
         print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros "
               f"| dropout {args.dropout} | {device_name()}\n")
 
-    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
+    if args.optimizer == "sgd":
+        optimizer = SGDMomentum(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=0.01)
+    else:
+        optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     rng = np.random.default_rng(args.seed)
     warmup = max(1, int(args.steps * 0.05))
 
@@ -161,12 +167,20 @@ def train(args) -> None:
         optimizer.lr = lr_schedule(step, args.lr, warmup, args.steps)
 
         x, y = get_batch(train_data, config.block_size, args.batch_size, rng)
-        _, loss = model.forward(x, y)
+        logits, loss = model.forward(x, y)
+        del logits  # não é usado no treino; descarta cedo
 
         model.zero_grad()
         loss.backward()
         clip_grad_norm(model.parameters(), max_norm=1.0)
         optimizer.step()
+        loss_value = float(loss.data)
+        # Solta o grafo desta iteração ANTES da próxima forward. Sem isso, a
+        # variável `loss` continua viva até a linha de cima ser executada de
+        # novo, então por um instante duas iterações têm o grafo retido ao
+        # mesmo tempo — em modelos grandes (ex.: xlarge) isso quase dobra o
+        # pico de memória e pode estourar a RAM/VRAM.
+        del loss
 
         if step % args.log_every == 0 or step == 1:
             vloss = estimate_val_loss(model, val_data, config, args.batch_size, rng)
@@ -178,7 +192,7 @@ def train(args) -> None:
                 best_val = vloss
                 save_checkpoint(model, tokenizer)
                 best = "  <- melhor (salvo)"
-            print(f"passo {step:5d}/{args.steps} | treino {float(loss.data):.4f} "
+            print(f"passo {step:5d}/{args.steps} | treino {loss_value:.4f} "
                   f"| val {vloss:.4f} | {elapsed:6.1f}s{best}")
 
     print(f"\nMelhor val loss: {best_val:.4f} | checkpoint em {CKPT_PATH}\n")
@@ -226,13 +240,17 @@ def main():
     parser.add_argument("--resume", action="store_true",
                         help="continua treinando o checkpoint existente em vez "
                              "de começar um modelo novo (mantém arquitetura/tokenizer salvos)")
+    parser.add_argument("--optimizer", choices=["adamw", "sgd"], default="adamw",
+                        help="adamw (padrão, 16 bytes/param) ou sgd (momentum, "
+                             "12 bytes/param — ~25%% mais leve, cabe modelo maior)")
     parser.add_argument("--steps", type=int, default=1500)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--block-size", type=int, default=None)
     parser.add_argument("--n-layer", type=int, default=None)
     parser.add_argument("--n-head", type=int, default=None)
     parser.add_argument("--n-embd", type=int, default=None)
-    parser.add_argument("--lr", type=float, default=3e-3)
+    parser.add_argument("--lr", type=float, default=None,
+                        help="padrão: 3e-3 (adamw) ou 5e-2 (sgd)")
     parser.add_argument("--log-every", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--generate", metavar="PROMPT",
@@ -246,6 +264,8 @@ def main():
     for key, value in preset.items():
         if getattr(args, key) is None:
             setattr(args, key, value)
+    if args.lr is None:
+        args.lr = 5e-2 if args.optimizer == "sgd" else 3e-3
 
     if args.generate is not None:
         if not os.path.exists(CKPT_PATH):
