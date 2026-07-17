@@ -32,6 +32,24 @@ data/corpus.txt       corpus de treino (gerado a partir de PDFs)
 tests/                checagem numérica do autograd
 ```
 
+## Manter a EVA atualizada (Windows)
+
+Para receber melhorias na interface e no código, obtenha o projeto com
+**git** (assim atualizar é um comando, não rebaixar o .zip):
+
+```powershell
+git clone -b claude/custom-ai-from-scratch-dx8d5p https://github.com/ciceromayk/EVA.git
+cd EVA
+```
+
+Depois é só clicar duas vezes:
+
+- **`iniciar.bat`** — instala o que falta e abre o painel no navegador.
+- **`atualizar.bat`** — baixa a versão mais recente do GitHub (`git pull`).
+
+Seus materiais (`materials/`) e modelos treinados (`*.pkl`) ficam fora do
+controle de versão, então atualizar **nunca apaga o que você treinou**.
+
 ## Painel web (a forma mais fácil)
 
 Uma interface local para você alimentar, treinar e conversar com a EVA
