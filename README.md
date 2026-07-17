@@ -30,6 +30,7 @@ check_gpu.py          autoteste de GPU (CPU vs CuPy)
 servidor.bat          sobe a EVA com senha, pronta para acesso remoto
 instalar_inicializacao.bat   liga o servidor sozinho com o Windows
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
+tools/fetch_online_corpus.py busca texto da Wikipédia / Project Gutenberg
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
 tests/                checagem numérica do autograd
 ```
@@ -264,6 +265,32 @@ portátil embutida, no cartão **💾 Salvar / restaurar cérebro**:
 
 Assim você treina quando quiser, de onde quiser, e leva a EVA com você.
 
+## Buscar conhecimento online (Wikipédia / Project Gutenberg)
+
+Além de PDFs e texto colado, o painel busca material direto da internet,
+no cartão **🌐 Buscar conhecimento online**:
+
+- **Wikipédia** — baixa o texto puro de artigos por título (aceita vários
+  separados por vírgula: `Inteligência artificial,Redes neurais,Sun Tzu`).
+- **Project Gutenberg** — busca por autor/título e baixa até 5 livros de
+  domínio público em texto puro (ex.: `Machado de Assis`).
+
+O texto baixado vira `.txt` em `materials/` e entra no corpus automaticamente,
+como qualquer outro material. Funciona sem nenhuma biblioteca extra —
+só chamadas HTTP simples (`urllib`, da biblioteca padrão).
+
+Também dá para usar por linha de comando:
+
+```bash
+python tools/fetch_online_corpus.py --wikipedia "Inteligência artificial,Redes neurais"
+python tools/fetch_online_corpus.py --gutenberg "Machado de Assis" --max-books 3
+```
+
+**Atenção ao tamanho**: esses corpora online podem ser bem maiores que os
+PDFs que você já usou. Comece com poucos artigos/livros por vez e
+acompanhe o crescimento do corpus no cartão "Memória da EVA" antes de
+adicionar muito de uma vez — corpus grande demais exige bem mais passos
+de treino para não ficar raso.
 
 ## Uso por linha de comando
 

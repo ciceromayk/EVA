@@ -62,6 +62,27 @@ def add_text(text):
     return stats_md(), ""
 
 
+def fetch_online(source, query, lang):
+    query = (query or "").strip()
+    lang = (lang or "pt").strip() or "pt"
+    if not query:
+        return stats_md(), "Digite um termo de busca."
+    os.makedirs(app.MATERIALS, exist_ok=True)
+    try:
+        if source == "wikipedia":
+            titles = [t.strip() for t in query.split(",") if t.strip()]
+            saved = app.fetch_wikipedia(titles, lang=lang, out_dir=app.MATERIALS)
+        else:
+            saved = app.fetch_gutenberg(query, lang=lang, max_books=5, out_dir=app.MATERIALS)
+    except Exception as exc:
+        return stats_md(), f"Falha na busca online: {exc}"
+    if not saved:
+        return stats_md(), "Nada encontrado para essa busca."
+    app.rebuild_corpus()
+    nomes = ", ".join(os.path.basename(p) for p in saved)
+    return stats_md(), f"Adicionado(s): {nomes}"
+
+
 def train_stream(preset, tokenizer, steps, dropout, device):
     ok, msg = app.start_training({
         "preset": preset, "tokenizer": tokenizer,
@@ -121,6 +142,21 @@ def build_demo() -> gr.Blocks:
             stats2 = gr.Markdown(stats_md())
             add_f.click(add_files, inputs=files, outputs=stats2)
             add_t.click(add_text, inputs=paste, outputs=[stats2, paste])
+
+        with gr.Tab("🌐 Buscar online"):
+            with gr.Row():
+                src = gr.Dropdown(["wikipedia", "gutenberg"], value="wikipedia",
+                                  label="Fonte", scale=2)
+                lang = gr.Textbox(value="pt", label="Idioma", scale=1)
+            query = gr.Textbox(label="Termo de busca",
+                               placeholder="Wikipédia: 'Inteligência artificial,Redes neurais' · "
+                                           "Gutenberg: 'Machado de Assis'")
+            gr.Markdown("Wikipédia aceita vários títulos separados por vírgula. "
+                       "Gutenberg busca por autor/título e traz até 5 livros.")
+            btn_online = gr.Button("🌐 Buscar e adicionar", variant="primary")
+            stats3 = gr.Markdown(stats_md())
+            online_msg = gr.Markdown()
+            btn_online.click(fetch_online, inputs=[src, query, lang], outputs=[stats3, online_msg])
 
         with gr.Tab("⚡ Treinar"):
             with gr.Row():

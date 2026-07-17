@@ -39,6 +39,7 @@ ALLOWED_EXT = (".pdf", ".txt", ".md")
 
 sys.path.insert(0, BASE)
 from tools.build_corpus import build  # noqa: E402
+from tools.fetch_online_corpus import fetch_gutenberg, fetch_wikipedia  # noqa: E402
 
 # Estado do processo de treino em andamento (um por vez).
 _train_proc: subprocess.Popen | None = None
@@ -263,6 +264,30 @@ class Handler(BaseHTTPRequestHandler):
                     f.write(body)
                 self._json({"ok": True, "msg": "Cérebro restaurado. Já dá para gerar texto."})
 
+            elif path == "/fetch_online":
+                data = json.loads(self._body() or b"{}")
+                source = data.get("source")
+                query = (data.get("query") or "").strip()
+                lang = (data.get("lang") or "pt").strip() or "pt"
+                if not query:
+                    return self._json({"ok": False, "msg": "Digite um termo de busca."}, 400)
+                os.makedirs(MATERIALS, exist_ok=True)
+                try:
+                    if source == "wikipedia":
+                        titles = [t.strip() for t in query.split(",") if t.strip()]
+                        saved = fetch_wikipedia(titles, lang=lang, out_dir=MATERIALS)
+                    elif source == "gutenberg":
+                        saved = fetch_gutenberg(query, lang=lang, max_books=5, out_dir=MATERIALS)
+                    else:
+                        return self._json({"ok": False, "msg": "Fonte desconhecida."}, 400)
+                except Exception as exc:
+                    return self._json({"ok": False, "msg": f"Falha na busca online: {exc}"}, 502)
+                if not saved:
+                    return self._json({"ok": False, "msg": "Nada encontrado para essa busca."})
+                stats = rebuild_corpus()
+                nomes = ", ".join(os.path.basename(p) for p in saved)
+                self._json({"ok": True, "msg": f"Adicionado(s): {nomes}", "corpus": stats})
+
             elif path == "/add_text":
                 data = json.loads(self._body() or b"{}")
                 text = (data.get("text") or "").strip()
@@ -452,6 +477,22 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
   </div>
 
   <div class="card">
+    <h2><span class="ic">🌐</span> Buscar conhecimento online</h2>
+    <div class="row">
+      <div style="flex:2"><label>Fonte</label><select id="onlinesrc">
+        <option value="wikipedia">Wikipédia (artigos por título)</option>
+        <option value="gutenberg">Project Gutenberg (livros de domínio público)</option></select></div>
+      <div><label>Idioma</label><input id="onlinelang" value="pt" maxlength="5"></div>
+    </div>
+    <label>Termo de busca</label>
+    <input id="onlinequery" placeholder="Wikipédia: 'Inteligência artificial,Redes neurais' · Gutenberg: 'Machado de Assis'">
+    <div class="hint">Wikipédia aceita vários títulos separados por vírgula. Gutenberg busca por
+      autor/título e traz até 5 livros.</div>
+    <div style="margin-top:11px"><button class="ghost" id="btn-online">🌐 Buscar e adicionar</button></div>
+    <div class="msg" id="online-msg"></div>
+  </div>
+
+  <div class="card">
     <h2><span class="ic">⚡</span> Treinar a mente <span class="badge" id="train-badge">em repouso</span></h2>
     <div class="row">
       <div><label>Tamanho do cérebro</label><select id="preset">
@@ -561,6 +602,14 @@ $('#addtext').onclick=async()=>{
   const j=await(await fetch('/add_text',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({text:$('#paste').value})})).json();
   flash('#add-msg',j.msg,j.ok);if(j.ok)$('#paste').value='';refresh();};
+
+$('#btn-online').onclick=async()=>{
+  const btn=$('#btn-online');btn.disabled=true;
+  flash('#online-msg','🌐 Buscando… pode levar alguns segundos',true);
+  const body={source:$('#onlinesrc').value,query:$('#onlinequery').value,lang:$('#onlinelang').value};
+  const j=await(await fetch('/fetch_online',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)})).json();
+  flash('#online-msg',j.msg,j.ok);btn.disabled=false;if(j.ok)$('#onlinequery').value='';refresh();};
 
 $('#btn-train').onclick=async()=>{
   const body={preset:$('#preset').value,tokenizer:$('#tokenizer').value,
