@@ -105,7 +105,7 @@ da CUDA**. Instale-as via pip (não precisa do CUDA Toolkit completo):
 ```bash
 py -m pip install nvidia-cuda-runtime-cu12 nvidia-cublas-cu12 ^
   nvidia-curand-cu12 nvidia-cusparse-cu12 nvidia-cusolver-cu12 ^
-  nvidia-cufft-cu12 nvidia-nvrtc-cu12
+  nvidia-cufft-cu12 nvidia-cuda-nvrtc-cu12 nvidia-nvjitlink-cu12
 py check_gpu.py
 ```
 
