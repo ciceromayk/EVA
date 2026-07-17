@@ -83,11 +83,11 @@ def fetch_online(source, query, lang):
     return stats_md(), f"Adicionado(s): {nomes}"
 
 
-def train_stream(preset, tokenizer, steps, dropout, device):
+def train_stream(preset, tokenizer, steps, dropout, device, resume):
     ok, msg = app.start_training({
         "preset": preset, "tokenizer": tokenizer,
         "steps": int(steps), "dropout": float(dropout),
-        "device": device, "bpe_vocab": 512,
+        "device": device, "bpe_vocab": 512, "resume": bool(resume),
     })
     if not ok:
         yield msg
@@ -159,6 +159,8 @@ def build_demo() -> gr.Blocks:
             btn_online.click(fetch_online, inputs=[src, query, lang], outputs=[stats3, online_msg])
 
         with gr.Tab("⚡ Treinar"):
+            resume = gr.Checkbox(label="🔄 Continuar do cérebro salvo (em vez de começar um modelo novo)",
+                                 value=False)
             with gr.Row():
                 preset = gr.Dropdown(["nano", "small", "medium", "large"],
                                      value="small", label="Tamanho do cérebro")
@@ -167,12 +169,14 @@ def build_demo() -> gr.Blocks:
                 steps = gr.Slider(100, 3000, value=1000, step=100, label="Ciclos (passos)")
                 dropout = gr.Slider(0.0, 0.6, value=0.1, step=0.05, label="Dropout")
                 device = gr.Dropdown(["cpu", "gpu"], value="cpu", label="Processador (gpu = CUDA)")
+            gr.Markdown("Ao continuar, a arquitetura/tokenizer/dropout vêm do cérebro salvo "
+                       "(preset/percepção/dropout acima são ignorados); só Ciclos e Processador valem.")
             with gr.Row():
                 btn_train = gr.Button("⚡ Iniciar treino", variant="primary")
                 btn_stop = gr.Button("■ Parar")
             log = gr.Textbox(label="Fluxo neural", lines=14, max_lines=14,
                              value="> aguardando ativação…")
-            btn_train.click(train_stream, inputs=[preset, tokenizer, steps, dropout, device], outputs=log)
+            btn_train.click(train_stream, inputs=[preset, tokenizer, steps, dropout, device, resume], outputs=log)
             btn_stop.click(stop_train, outputs=log)
 
         with gr.Tab("💬 Conversar"):

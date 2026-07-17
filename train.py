@@ -99,33 +99,60 @@ def train(args) -> None:
     with open(args.data, encoding="utf-8") as f:
         text = f.read()
 
-    if args.tokenizer == "bpe":
-        print(f"Treinando tokenizador BPE (vocab {args.bpe_vocab})...")
-        tokenizer = BPETokenizer.train(text, vocab_size=args.bpe_vocab)
+    if args.resume:
+        if not os.path.exists(CKPT_PATH):
+            raise SystemExit("Nenhum checkpoint encontrado para continuar. "
+                              "Treine do zero primeiro (sem --resume).")
+        model, tokenizer = load_checkpoint()
+        config = model.config
+        print("Continuando treino do checkpoint existente "
+              "(arquitetura, tokenizer e dropout vêm do arquivo salvo; "
+              "--preset/--tokenizer/--bpe-vocab/--dropout são ignorados)")
     else:
-        tokenizer = CharTokenizer.from_text(text)
+        if args.tokenizer == "bpe":
+            print(f"Treinando tokenizador BPE (vocab {args.bpe_vocab})...")
+            tokenizer = BPETokenizer.train(text, vocab_size=args.bpe_vocab)
+        else:
+            tokenizer = CharTokenizer.from_text(text)
+        config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
+                           n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd,
+                           dropout=args.dropout)
+        model = GPT(config)
+
+    # A EVA sempre reencoda com o tokenizer DELA (novo ou carregado do
+    # checkpoint) — nunca com um tokenizer recém-criado sobre o corpus
+    # atual, para não descasar do vocabulário que o modelo já conhece.
     data = np.array(tokenizer.encode(text), dtype=np.int64)
     # Split de validação intercalado: reserva 1 de cada 10 blocos contíguos.
     # Como o corpus concatena livros distintos, um corte no fim isolaria um
     # único domínio; intercalar faz a val cobrir a mesma mistura do treino.
-    chunk = args.block_size + 1
+    chunk = config.block_size + 1
     blocks = [data[i:i + chunk] for i in range(0, len(data) - chunk, chunk)]
     train_data = np.concatenate([b for i, b in enumerate(blocks) if i % 10 != 0])
     val_data = np.concatenate([b for i, b in enumerate(blocks) if i % 10 == 0])
+    tok_kind = "bpe" if isinstance(tokenizer, BPETokenizer) else "char"
     print(f"Corpus: {len(text):,} caracteres -> {len(data):,} tokens "
-          f"({args.tokenizer}, vocabulário {tokenizer.vocab_size})")
+          f"({tok_kind}, vocabulário {tokenizer.vocab_size})")
 
-    config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
-                       n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd,
-                       dropout=args.dropout)
-    model = GPT(config)
-    print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros "
-          f"| dropout {args.dropout} | {device_name()}\n")
+    if args.resume:
+        print(f"Modelo EVA (continuado): {model.num_params():,} parâmetros | {device_name()}\n")
+    else:
+        print(f"Modelo EVA ({args.preset}): {model.num_params():,} parâmetros "
+              f"| dropout {args.dropout} | {device_name()}\n")
 
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=0.01)
     rng = np.random.default_rng(args.seed)
     warmup = max(1, int(args.steps * 0.05))
-    best_val = float("inf")
+
+    # Ao continuar, nunca deixamos o checkpoint regredir: medimos a
+    # qualidade do modelo carregado ANTES de treinar mais, e só
+    # sobrescrevemos se um passo futuro bater essa marca de verdade.
+    if args.resume:
+        best_val = estimate_val_loss(model, val_data, config, args.batch_size, rng)
+        print(f"Val loss do checkpoint carregado: {best_val:.4f} (referência a bater)\n")
+    else:
+        best_val = float("inf")
+
     start = time.time()
 
     for step in range(1, args.steps + 1):
@@ -196,6 +223,9 @@ def main():
                         help="taxa de dropout (regularização; 0 desliga)")
     parser.add_argument("--device", choices=["cpu", "gpu"], default="cpu",
                         help="cpu (NumPy) ou gpu (CuPy/CUDA)")
+    parser.add_argument("--resume", action="store_true",
+                        help="continua treinando o checkpoint existente em vez "
+                             "de começar um modelo novo (mantém arquitetura/tokenizer salvos)")
     parser.add_argument("--steps", type=int, default=1500)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--block-size", type=int, default=None)

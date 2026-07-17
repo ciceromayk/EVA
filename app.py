@@ -96,23 +96,31 @@ def start_training(opts: dict) -> tuple[bool, str]:
     with _lock:
         if training_active():
             return False, "Já existe um treino em andamento."
-        if corpus_stats()["chars"] < 200:
+        resume = bool(opts.get("resume"))
+        if resume and not os.path.exists(CKPT):
+            return False, "Nenhum cérebro salvo para continuar. Treine do zero primeiro."
+        if not resume and corpus_stats()["chars"] < 200:
             return False, "Corpus muito pequeno. Adicione material primeiro."
         cmd = [
             sys.executable, os.path.join(BASE, "train.py"),
-            "--preset", str(opts.get("preset", "medium")),
-            "--tokenizer", str(opts.get("tokenizer", "char")),
             "--steps", str(int(opts.get("steps", 1500))),
-            "--dropout", str(float(opts.get("dropout", 0.1))),
             "--device", "gpu" if opts.get("device") == "gpu" else "cpu",
             "--log-every", "25",
         ]
-        if opts.get("tokenizer") == "bpe":
-            cmd += ["--bpe-vocab", str(int(opts.get("bpe_vocab", 512)))]
+        if resume:
+            cmd += ["--resume"]
+        else:
+            cmd += [
+                "--preset", str(opts.get("preset", "medium")),
+                "--tokenizer", str(opts.get("tokenizer", "char")),
+                "--dropout", str(float(opts.get("dropout", 0.1))),
+            ]
+            if opts.get("tokenizer") == "bpe":
+                cmd += ["--bpe-vocab", str(int(opts.get("bpe_vocab", 512)))]
         logfile = open(LOG, "w")
         _train_proc = subprocess.Popen(cmd, stdout=logfile, stderr=subprocess.STDOUT,
                                        cwd=BASE, env={**os.environ, "PYTHONUNBUFFERED": "1"})
-    return True, "Treino iniciado."
+    return True, "Continuando treino do cérebro salvo…" if resume else "Treino iniciado."
 
 
 def stop_training() -> tuple[bool, str]:
@@ -445,6 +453,10 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
 .out.think{color:var(--mut);font-style:italic}
 .msg{font-size:13px;margin-top:11px;min-height:18px}.ok{color:var(--lime)}.err{color:#ff7b9c}
 .hint{font-size:12px;color:var(--mut);margin-top:7px}
+.checkrow{display:flex;align-items:center;gap:9px;margin-bottom:14px;cursor:pointer;user-select:none}
+.checkrow input{width:auto;accent-color:var(--cyan);cursor:pointer}
+.checkrow span{font-size:14px}
+.archonly.dim{opacity:.35;pointer-events:none}
 .foot{text-align:center;color:var(--mut);font-size:12px;padding:10px}
 </style></head>
 <body>
@@ -494,21 +506,25 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
 
   <div class="card">
     <h2><span class="ic">⚡</span> Treinar a mente <span class="badge" id="train-badge">em repouso</span></h2>
+    <label class="checkrow" for="resume"><input type="checkbox" id="resume">
+      <span>🔄 Continuar do cérebro salvo (em vez de começar um modelo novo)</span></label>
     <div class="row">
-      <div><label>Tamanho do cérebro</label><select id="preset">
+      <div class="archonly"><label>Tamanho do cérebro</label><select id="preset">
         <option value="nano">nano · relâmpago</option>
         <option value="small" selected>small · rápido</option>
         <option value="medium">medium · esperto</option>
         <option value="large">large · lento</option></select></div>
-      <div><label>Percepção</label><select id="tokenizer">
+      <div class="archonly"><label>Percepção</label><select id="tokenizer">
         <option value="char">char · letra a letra</option>
         <option value="bpe">bpe · subpalavras</option></select></div>
       <div><label>Ciclos (passos)</label><input type="number" id="steps" value="1000" min="100" step="100"></div>
-      <div><label>Dropout</label><input type="number" id="dropout" value="0.1" min="0" max="0.9" step="0.05"></div>
+      <div class="archonly"><label>Dropout</label><input type="number" id="dropout" value="0.1" min="0" max="0.9" step="0.05"></div>
       <div><label>Processador</label><select id="device">
         <option value="cpu">CPU</option>
         <option value="gpu">GPU · CUDA</option></select></div>
     </div>
+    <div class="hint" id="resume-hint" style="display:none">Continuando: usa a arquitetura, tokenizer e
+      dropout do cérebro já salvo. Só "Ciclos" e "Processador" continuam valendo (acima).</div>
     <div style="margin-top:18px;display:flex;gap:11px">
       <button class="primary" id="btn-train">⚡ Iniciar treino</button>
       <button class="ghost" id="btn-stop">■ Parar</button>
@@ -569,6 +585,9 @@ async function refresh(){
   $('#btn-gen').disabled=!s.has_checkpoint;
   $('#btn-dl').disabled=!s.has_checkpoint;
   $('#gen-hint').style.display=s.has_checkpoint?'none':'block';
+  $('#resume').disabled=!s.has_checkpoint;
+  if(!s.has_checkpoint)$('#resume').checked=false;
+  updateResumeUI();
   if(s.training){
     const t=await(await fetch('/log')).text();
     const el=$('#log');el.textContent=t||'> iniciando…';el.scrollTop=el.scrollHeight;
@@ -611,9 +630,19 @@ $('#btn-online').onclick=async()=>{
     body:JSON.stringify(body)})).json();
   flash('#online-msg',j.msg,j.ok);btn.disabled=false;if(j.ok)$('#onlinequery').value='';refresh();};
 
+function updateResumeUI(){
+  const resuming=$('#resume').checked;
+  document.querySelectorAll('.archonly').forEach(el=>el.classList.toggle('dim',resuming));
+  document.querySelectorAll('.archonly select,.archonly input').forEach(el=>el.disabled=resuming);
+  $('#resume-hint').style.display=resuming?'block':'none';
+}
+$('#resume').onchange=updateResumeUI;
+
 $('#btn-train').onclick=async()=>{
+  const resume=$('#resume').checked;
   const body={preset:$('#preset').value,tokenizer:$('#tokenizer').value,
-    steps:$('#steps').value,dropout:$('#dropout').value,device:$('#device').value,bpe_vocab:512};
+    steps:$('#steps').value,dropout:$('#dropout').value,device:$('#device').value,
+    bpe_vocab:512,resume};
   const j=await(await fetch('/train',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)})).json();flash('#train-msg',j.msg,j.ok);refresh();};
 $('#btn-stop').onclick=async()=>{

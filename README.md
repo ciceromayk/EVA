@@ -32,7 +32,7 @@ instalar_inicializacao.bat   liga o servidor sozinho com o Windows
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 tools/fetch_online_corpus.py busca texto da Wikipédia / Project Gutenberg
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
-tests/                checagem numérica do autograd
+tests/                checagem numérica do autograd, BPE e treino incremental
 ```
 
 ## Manter a EVA atualizada (Windows)
@@ -74,6 +74,29 @@ No painel você pode:
 
 O material enviado fica em `materials/` e o corpus é montado a partir dele.
 Na primeira execução, o corpus atual é preservado como material inicial.
+
+## Treino incremental (continuar o cérebro salvo)
+
+Por padrão, cada treino começa um modelo **novo**, do zero. Marcando
+**🔄 Continuar do cérebro salvo** no cartão "Treinar a mente" (ou passando
+`--resume` no `train.py`), a EVA carrega o checkpoint existente e continua
+treinando **a partir dele**, em vez de recomeçar — a arquitetura, o
+tokenizer e o dropout usados são os do checkpoint (as opções de
+preset/percepção/dropout ficam desativadas nesse modo; só "Ciclos" e
+"Processador" continuam valendo).
+
+Isso é o que permite **excluir os documentos depois de treinar** sem medo:
+o conhecimento já fica todo nos pesos do modelo. Se um dia você quiser
+ensinar mais coisas à mesma EVA, é só adicionar o material novo e marcar
+"Continuar" — não precisa manter os documentos antigos por perto.
+
+Por segurança, o treino incremental nunca piora o que já existe: antes de
+começar, ele mede a qualidade do checkpoint carregado e só sobrescreve o
+arquivo se um passo novo bater essa marca de verdade.
+
+```bash
+python train.py --resume --steps 1000 --device gpu
+```
 
 ## Rodar na GPU (NVIDIA / CUDA)
 
