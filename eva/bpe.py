@@ -8,34 +8,64 @@ final, sequências comuns ("ção", "modelo", " de ") viram um único token.
 
 É o mesmo algoritmo usado por GPT-2/GPT-3/GPT-4 (aqui em miniatura, em
 nível de byte, sem regex de pré-tokenização).
+
+Implementado com NumPy vetorizado: contar pares e aplicar uma fusão em um
+array de milhões de elementos com laços Python puro é impraticável (cada
+fusão faz uma varredura completa, e são até `vocab_size - 256` fusões). As
+mesmas duas operações em NumPy (`np.unique` para contar, comparação
+vetorizada + laço só sobre as poucas posições que casam para aplicar a
+fusão) chegam a ser centenas de vezes mais rápidas no mesmo corpus.
 """
 
 from __future__ import annotations
 
 import json
-from collections import Counter
+
+import numpy as np
 
 
-def _get_pairs(ids: list[int]) -> Counter:
-    """Conta cada par de símbolos adjacentes na sequência."""
-    counts: Counter = Counter()
-    for a, b in zip(ids, ids[1:]):
-        counts[(a, b)] += 1
-    return counts
+def _count_pairs(ids: np.ndarray) -> dict[tuple[int, int], int]:
+    """Conta pares adjacentes com NumPy: codifica cada par (a, b) num único
+    inteiro (a*BASE + b) e usa np.unique para contar em lote, em vez de um
+    laço Python por elemento."""
+    if ids.size < 2:
+        return {}
+    base = int(ids.max()) + 1
+    codes = ids[:-1].astype(np.int64) * base + ids[1:].astype(np.int64)
+    unique, counts = np.unique(codes, return_counts=True)
+    a, b = np.divmod(unique, base)
+    return {(int(x), int(y)): int(c) for x, y, c in zip(a, b, counts)}
 
 
-def _merge(ids: list[int], pair: tuple[int, int], new_id: int) -> list[int]:
-    """Substitui toda ocorrência de `pair` pelo token `new_id`."""
-    out: list[int] = []
-    i = 0
-    while i < len(ids):
-        if i < len(ids) - 1 and ids[i] == pair[0] and ids[i + 1] == pair[1]:
-            out.append(new_id)
-            i += 2
+def _merge(ids: np.ndarray, pair: tuple[int, int], new_id: int) -> np.ndarray:
+    """Substitui toda ocorrência (não sobreposta) de `pair` por `new_id`.
+
+    Acha os candidatos com comparação vetorizada (rápido mesmo em milhões
+    de elementos) e só usa um laço Python sobre as POSIÇÕES que casaram —
+    tipicamente uma fração pequena do array — para descartar sobreposições
+    (ex.: em "aaa", só a primeira ocorrência de "aa" pode ser fundida).
+    """
+    if ids.size < 2:
+        return ids
+    match = (ids[:-1] == pair[0]) & (ids[1:] == pair[1])
+    positions = np.flatnonzero(match)
+    if positions.size == 0:
+        return ids
+
+    keep = np.ones(positions.size, dtype=bool)
+    last = -2
+    for i, pos in enumerate(positions.tolist()):
+        if pos == last + 1:
+            keep[i] = False  # sobrepõe a fusão anterior; pula
         else:
-            out.append(ids[i])
-            i += 1
-    return out
+            last = pos
+    positions = positions[keep]
+
+    drop = np.zeros(ids.size, dtype=bool)
+    drop[positions + 1] = True
+    out = ids.copy()
+    out[positions] = new_id
+    return out[~drop]
 
 
 class BPETokenizer:
@@ -61,12 +91,12 @@ class BPETokenizer:
     def train(cls, text: str, vocab_size: int, verbose: bool = False) -> "BPETokenizer":
         """Aprende as fusões a partir do texto até atingir `vocab_size`."""
         assert vocab_size >= 256, "vocab_size precisa ser >= 256 (bytes base)"
-        ids = list(text.encode("utf-8"))
+        ids = np.frombuffer(text.encode("utf-8"), dtype=np.uint8).astype(np.int64)
         merges: dict[tuple[int, int], int] = {}
         num_merges = vocab_size - 256
 
         for i in range(num_merges):
-            pairs = _get_pairs(ids)
+            pairs = _count_pairs(ids)
             if not pairs:
                 break
             # par mais frequente (desempate estável pelo próprio par)
@@ -84,16 +114,16 @@ class BPETokenizer:
 
     # ------------------------------------------------------------------
     def encode(self, text: str) -> list[int]:
-        ids = list(text.encode("utf-8"))
+        ids = np.frombuffer(text.encode("utf-8"), dtype=np.uint8).astype(np.int64)
         # aplica as fusões na ordem de criação (menor new_id primeiro)
-        while len(ids) >= 2:
-            pairs = _get_pairs(ids)
+        while ids.size >= 2:
+            pairs = _count_pairs(ids)
             # escolhe o par cuja fusão foi aprendida mais cedo (menor id)
             candidate = min(pairs, key=lambda p: self.merges.get(p, float("inf")))
             if candidate not in self.merges:
                 break
             ids = _merge(ids, candidate, self.merges[candidate])
-        return ids
+        return ids.tolist()
 
     def decode(self, ids) -> str:
         data = b"".join(self.vocab[int(i)] for i in ids)

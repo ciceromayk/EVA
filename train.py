@@ -114,7 +114,7 @@ def train(args) -> None:
     else:
         if args.tokenizer == "bpe":
             print(f"Treinando tokenizador BPE (vocab {args.bpe_vocab})...")
-            tokenizer = BPETokenizer.train(text, vocab_size=args.bpe_vocab)
+            tokenizer = BPETokenizer.train(text, vocab_size=args.bpe_vocab, verbose=True)
         else:
             tokenizer = CharTokenizer.from_text(text)
         config = GPTConfig(vocab_size=tokenizer.vocab_size, block_size=args.block_size,
