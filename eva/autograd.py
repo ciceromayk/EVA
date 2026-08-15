@@ -275,6 +275,23 @@ class Tensor:
 
         return Tensor._result(data, (self,), backward)
 
+    def silu(self):
+        """SiLU / Swish: x * sigmoid(x) — a ativação usada no Llama.
+
+        É a metade "portão" do SwiGLU: suave como a GELU, mas mais barata
+        de calcular (uma sigmoide em vez de uma tanh de polinômio).
+        """
+        x = self.data
+        sig = 1.0 / (1.0 + np.exp(-x))
+        data = x * sig
+
+        def backward(grad):
+            if self.requires_grad:
+                # d/dx [x*sig] = sig + x*sig*(1-sig) = sig*(1 + x*(1-sig))
+                self._accumulate(grad * (sig * (1.0 + x * (1.0 - sig))))
+
+        return Tensor._result(data, (self,), backward)
+
     # ------------------------------------------------------------------
     # Reduções e mudanças de forma
     # ------------------------------------------------------------------
@@ -423,6 +440,59 @@ def layer_norm(x: Tensor, gamma: Tensor, beta: Tensor, eps: float = 1e-5) -> Ten
             x._accumulate(dx)
 
     return Tensor._result(data, (x, gamma, beta), backward)
+
+
+def rms_norm(x: Tensor, gamma: Tensor, eps: float = 1e-5) -> Tensor:
+    """RMSNorm fundido (Llama): normaliza pela raiz da média dos quadrados.
+
+    Diferente do LayerNorm, NÃO subtrai a média nem tem deslocamento (beta):
+    só reescala cada vetor para norma RMS 1 e aplica o ganho `gamma`. Menos
+    contas, menos parâmetros, e na prática treina igual ou melhor.
+    """
+    xd = x.data
+    ms = (xd * xd).mean(axis=-1, keepdims=True)
+    rrms = 1.0 / np.sqrt(ms + eps)
+    xhat = xd * rrms
+    data = xhat * gamma.data
+
+    def backward(grad):
+        if gamma.requires_grad:
+            axes = tuple(range(grad.ndim - 1))
+            gamma._accumulate((grad * xhat).sum(axis=axes))
+        if x.requires_grad:
+            dxhat = grad * gamma.data
+            # dx = rrms * (dxhat - xhat * mean(dxhat * xhat))
+            dx = rrms * (dxhat - xhat * (dxhat * xhat).mean(axis=-1, keepdims=True))
+            x._accumulate(dx)
+
+    return Tensor._result(data, (x, gamma), backward)
+
+
+def rope(x: Tensor, cos: np.ndarray, sin: np.ndarray) -> Tensor:
+    """RoPE — Rotary Position Embedding (Llama), como uma única operação.
+
+    Em vez de SOMAR um vetor de posição ao embedding (estilo GPT), o RoPE
+    GIRA cada par de coordenadas de Q e K por um ângulo proporcional à
+    posição do token. O produto escalar entre Q e K passa a depender só da
+    DISTÂNCIA relativa entre os tokens — por isso generaliza melhor.
+
+    `x` tem shape (..., T, head_dim); a rotação emparelha a primeira metade
+    do vetor com a segunda (convenção do Llama). `cos`/`sin` têm shape
+    (T, head_dim/2) e são pré-computados (não são parâmetros treináveis).
+    """
+    xd = x.data
+    half = xd.shape[-1] // 2
+    x1, x2 = xd[..., :half], xd[..., half:]
+    data = np.concatenate([x1 * cos - x2 * sin, x1 * sin + x2 * cos], axis=-1)
+
+    def backward(grad):
+        if x.requires_grad:
+            g1, g2 = grad[..., :half], grad[..., half:]
+            # a rotação é ortogonal: o backward é girar no sentido contrário
+            dx = np.concatenate([g1 * cos + g2 * sin, -g1 * sin + g2 * cos], axis=-1)
+            x._accumulate(dx)
+
+    return Tensor._result(data, (x,), backward)
 
 
 def softmax(x: Tensor, axis: int = -1) -> Tensor:

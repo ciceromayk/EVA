@@ -40,6 +40,7 @@ ALLOWED_EXT = (".pdf", ".txt", ".md")
 
 sys.path.insert(0, BASE)
 from eva.model import GPTConfig  # noqa: E402
+from eva.nn import swiglu_hidden  # noqa: E402
 from tools.build_corpus import build  # noqa: E402
 from tools.fetch_online_corpus import fetch_gutenberg, fetch_wikipedia  # noqa: E402
 from train import PRESETS  # noqa: E402
@@ -109,17 +110,19 @@ def _size_fields(param_count: int, optimizer: str = "adamw", batch_size: int = 1
 
 
 def _gpt_param_count(vocab_size: int, block_size: int, n_layer: int, n_embd: int) -> int:
-    """Conta os parâmetros de um GPT ANALITICAMENTE (sem construir o modelo).
+    """Conta os parâmetros da EVA ANALITICAMENTE (sem construir o modelo).
 
-    Construir um GPT de verdade só para chamar .num_params() aloca todos os
-    pesos (para o preset xlarge, ~1,2GB e ~9-10s no CPU) — caro demais para
-    uma estimativa que o painel pede a cada troca de preset. A fórmula
-    replica exatamente a arquitetura de eva/nn.py e eva/model.py:
-    embeddings de token+posição, por camada (LayerNorm x2, atenção
-    qkv+proj, MLP fc+proj), LayerNorm final e a cabeça de saída.
+    Construir o modelo de verdade só para chamar .num_params() aloca todos
+    os pesos (para o preset xlarge, ~1,2GB e ~9-10s no CPU) — caro demais
+    para uma estimativa que o painel pede a cada troca de preset. A fórmula
+    replica exatamente a arquitetura Llama de eva/nn.py e eva/model.py:
+    embedding de token (posições via RoPE, sem parâmetros), por camada
+    (RMSNorm x2, atenção qkv+proj sem bias, MLP SwiGLU gate+up+down),
+    RMSNorm final e a cabeça de saída.
     """
-    per_layer = 12 * n_embd * n_embd + 13 * n_embd
-    return (2 * vocab_size * n_embd) + (block_size * n_embd) + n_layer * per_layer + 2 * n_embd
+    hidden = swiglu_hidden(n_embd)
+    per_layer = 4 * n_embd * n_embd + 3 * n_embd * hidden + 2 * n_embd
+    return (2 * vocab_size * n_embd) + n_layer * per_layer + n_embd
 
 
 def estimate_model_info(preset: str, tokenizer_kind: str, optimizer: str = "adamw") -> dict:

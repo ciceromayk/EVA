@@ -6,7 +6,7 @@ numérica, temos alta confiança de que o backpropagation está correto.
 
 import numpy as np
 
-from eva.autograd import Tensor, cross_entropy, dropout, no_grad, softmax
+from eva.autograd import Tensor, cross_entropy, dropout, no_grad, rms_norm, rope, softmax
 
 
 def numerical_grad(fn, x, eps=1e-4):
@@ -39,6 +39,7 @@ def test_elementwise():
     check(lambda t: (t * t + 1.0).log(), (5,))
     check(lambda t: t.exp(), (3, 2))
     check(lambda t: t.gelu(), (4, 3))
+    check(lambda t: t.silu(), (4, 3))
     check(lambda t: (t * 1.5).relu() + t, (4, 3))
 
 
@@ -66,6 +67,31 @@ def test_dropout_off_em_no_grad():
     assert np.allclose(out.data[out.data != 0], 2.0)
 
 
+def test_rms_norm_grad():
+    gamma = Tensor(np.random.default_rng(4).standard_normal(6), requires_grad=False)
+    check(lambda t: rms_norm(t, gamma), (5, 6))
+    # gradiente do gamma: comparação com diferenças finitas
+    rng = np.random.default_rng(5)
+    x = Tensor(rng.standard_normal((4, 6)), requires_grad=False)
+    g = Tensor(rng.standard_normal(6).astype(np.float64), requires_grad=True)
+    rms_norm(x, g).sum().backward()
+    numeric = numerical_grad(lambda t: rms_norm(x, t), g)
+    assert np.allclose(g.grad, numeric, atol=1e-3)
+
+
+def test_rope_grad_and_norm():
+    # tabelas de um RoPE pequeno: T=5 posições, head_dim=6 (half=3)
+    rng = np.random.default_rng(6)
+    half = 3
+    angles = np.outer(np.arange(5.0), 10000.0 ** (-np.arange(half) / half))
+    cos, sin = np.cos(angles), np.sin(angles)
+    check(lambda t: rope(t, cos, sin), (2, 5, 6))
+    # rotação é ortogonal: preserva a norma de cada vetor
+    x = Tensor(rng.standard_normal((2, 5, 6)))
+    out = rope(x, cos, sin)
+    assert np.allclose((out.data ** 2).sum(-1), (x.data ** 2).sum(-1), atol=1e-5)
+
+
 def test_cross_entropy_matches_manual():
     rng = np.random.default_rng(3)
     logits = Tensor(rng.standard_normal((6, 4)), requires_grad=True)
@@ -86,5 +112,7 @@ if __name__ == "__main__":
     test_matmul_and_reduce()
     test_softmax_rows_sum_to_one()
     test_dropout_off_em_no_grad()
+    test_rms_norm_grad()
+    test_rope_grad_and_norm()
     test_cross_entropy_matches_manual()
     print("Todos os testes de autograd passaram.")

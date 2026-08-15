@@ -84,7 +84,18 @@ def load_checkpoint():
     tok_blob = blob.get("tokenizer") or {"kind": "char", "chars": blob["chars"]}
     tokenizer = deserialize_tokenizer(tok_blob)
     model = GPT(blob["config"])
-    for p, saved in zip(model.parameters(), blob["params"]):
+    params = model.parameters()
+    saved_params = blob["params"]
+    # Checkpoints da era GPT (LayerNorm + embedding de posição) não são
+    # compatíveis com a arquitetura Llama atual: melhor um erro claro do
+    # que carregar pesos pela metade e gerar lixo.
+    if len(params) != len(saved_params) or any(
+            tuple(p.data.shape) != tuple(s.shape) for p, s in zip(params, saved_params)):
+        raise SystemExit(
+            f"O checkpoint {CKPT_PATH} foi salvo com a arquitetura antiga (estilo GPT) "
+            "e não é compatível com a EVA atual (estilo Llama: RoPE, RMSNorm, SwiGLU). "
+            "Apague ou renomeie o arquivo e treine de novo do zero.")
+    for p, saved in zip(params, saved_params):
         p.data = to_device(saved)  # leva os pesos para o dispositivo atual
     return model, tokenizer
 

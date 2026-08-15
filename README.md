@@ -1,14 +1,15 @@
 # EVA — uma IA construída do zero
 
-**EVA** é um modelo de linguagem (um *Transformer* estilo GPT) implementado
-inteiramente do zero em **NumPy puro** — sem PyTorch, sem TensorFlow. O
-objetivo é educacional: mostrar, peça por peça, como uma IA moderna que
-gera texto realmente funciona por dentro.
+**EVA** é um modelo de linguagem (um *Transformer* estilo **Llama**)
+implementado inteiramente do zero em **NumPy puro** — sem PyTorch, sem
+TensorFlow. O objetivo é educacional: mostrar, peça por peça, como uma IA
+moderna que gera texto realmente funciona por dentro.
 
 Tudo o que faz uma rede neural aprender está aqui e é legível:
 
 - **Diferenciação automática** (backpropagation) escrita à mão
-- **Atenção multi-cabeça causal** — o coração dos Transformers
+- **Atenção multi-cabeça causal com RoPE** — posições rotacionais, como no Llama
+- **RMSNorm** e **MLP SwiGLU** — os mesmos blocos do Llama, sem bias
 - **Otimizador AdamW** e recorte de gradiente
 - **Tokenizador** e laço de **treino** completos
 
@@ -18,8 +19,8 @@ Tudo o que faz uma rede neural aprender está aqui e é legível:
 eva/
   backend.py          seletor de array: NumPy (CPU) ou CuPy (GPU)
   autograd.py         motor de autograd (Tensor + backpropagation)
-  nn.py               camadas: Linear, LayerNorm, atenção, MLP, Block
-  model.py            o modelo GPT completo + geração de texto
+  nn.py               camadas: Linear, RMSNorm, atenção com RoPE, SwiGLU, Block
+  model.py            o modelo completo (arquitetura Llama) + geração de texto
   optim.py            otimizador AdamW e clip de gradiente
   tokenizer.py        tokenizador em nível de caractere
 app.py                painel web (http.server) para uso local / Render / Docker
@@ -466,10 +467,12 @@ corpus: estratégia militar, modelos de linguagem e programação.
 ## Como a EVA funciona (visão geral)
 
 1. **Tokenização** — o texto vira uma sequência de inteiros (um por caractere).
-2. **Embeddings** — cada token e sua posição viram vetores.
-3. **Blocos Transformer** — cada bloco tem *atenção causal* (cada posição
-   olha só para o passado) seguida de uma pequena rede feed-forward, ambas
-   com conexões residuais e LayerNorm.
+2. **Embeddings** — cada token vira um vetor; a *posição* não é somada ao
+   embedding: ela entra na atenção via **RoPE** (rotação de Q e K), como no
+   Llama.
+3. **Blocos Transformer (estilo Llama)** — cada bloco tem *atenção causal*
+   (cada posição olha só para o passado) seguida de uma rede feed-forward
+   **SwiGLU**, ambas com conexões residuais e pré-**RMSNorm**.
 4. **Cabeça de saída** — projeta para o vocabulário; o *softmax* dá a
    probabilidade do próximo caractere.
 5. **Treino** — a *entropia cruzada* mede o erro; o **autograd** calcula os
