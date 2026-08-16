@@ -113,7 +113,7 @@ def _gpt_param_count(vocab_size: int, _block_size: int, n_layer: int, n_embd: in
     """Conta os parâmetros da EVA ANALITICAMENTE (sem construir o modelo).
 
     Construir o modelo de verdade só para chamar .num_params() aloca todos
-    os pesos (para o preset xlarge, ~1,2GB e ~9-10s no CPU) — caro demais
+    os pesos (para o preset xlarge, ~1,15GB e ~9-10s no CPU) — caro demais
     para uma estimativa que o painel pede a cada troca de preset. A fórmula
     replica exatamente a arquitetura Llama de eva/nn.py e eva/model.py:
     embedding de token (posições via RoPE, sem parâmetros), por camada

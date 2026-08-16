@@ -36,11 +36,17 @@ CKPT_PATH = "eva_checkpoint.pkl"
 # de aprender, ao custo de mais tempo/memória. "xlarge" (~300M parâmetros)
 # é o teto realista para treinar por inteiro numa GPU de 8GB (ver README,
 # seção "Quanto dá para treinar no seu hardware").
+#
+# nano fica minúsculo de propósito (teste rápido / sanidade). Os demais
+# foram recalibrados para dar mais "cérebro" sem explodir o tempo de
+# treino: cada um foi medido neste projeto (CPU comum) antes de fixar o
+# tamanho, buscando o ponto onde a capacidade sobe bem mais rápido que o
+# tempo por passo.
 PRESETS = {
     "nano":   dict(n_layer=2,  n_head=2,  n_embd=64,   block_size=48,  batch_size=16),
-    "small":  dict(n_layer=3,  n_head=4,  n_embd=96,   block_size=64,  batch_size=16),
-    "medium": dict(n_layer=4,  n_head=6,  n_embd=192,  block_size=96,  batch_size=16),
-    "large":  dict(n_layer=6,  n_head=8,  n_embd=256,  block_size=128, batch_size=12),
+    "small":  dict(n_layer=4,  n_head=4,  n_embd=128,  block_size=96,  batch_size=16),
+    "medium": dict(n_layer=5,  n_head=8,  n_embd=224,  block_size=96,  batch_size=14),
+    "large":  dict(n_layer=7,  n_head=8,  n_embd=320,  block_size=160, batch_size=10),
     "xlarge": dict(n_layer=24, n_head=16, n_embd=1024, block_size=256, batch_size=4),
 }
 

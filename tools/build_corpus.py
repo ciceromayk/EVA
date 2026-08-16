@@ -71,9 +71,39 @@ def extract_file(path: str) -> str:
         return clean_text(f.read())
 
 
+def _dedup_key(paragraph: str) -> str:
+    """Normaliza um parágrafo para comparação (ignora maiúsculas/espaços)."""
+    return re.sub(r"\s+", " ", paragraph).strip().lower()
+
+
+def dedup_paragraphs(text: str, min_len: int = 40) -> tuple[str, int]:
+    """Remove parágrafos DUPLICADOS entre as fontes, mantendo a 1ª ocorrência.
+
+    Comum quando o mesmo prefácio/licença/capítulo aparece em mais de um
+    arquivo (ex.: dois PDFs do mesmo livro, ou um artigo citado inteiro em
+    outro). Só compara parágrafos com `min_len`+ caracteres — parágrafos
+    curtos (títulos, diálogos de uma linha) repetem naturalmente e não são
+    "boilerplate", então ficam de fora da checagem.
+    """
+    seen: set[str] = set()
+    kept: list[str] = []
+    dropped = 0
+    for para in text.split("\n\n"):
+        key = _dedup_key(para)
+        if len(key) >= min_len:
+            if key in seen:
+                dropped += 1
+                continue
+            seen.add(key)
+        kept.append(para)
+    return "\n\n".join(kept), dropped
+
+
 def build(paths: list[str]) -> str:
     parts = [extract_file(path) for path in paths]
-    return "\n\n".join(p for p in parts if p) + "\n"
+    joined = "\n\n".join(p for p in parts if p) + "\n"
+    deduped, _ = dedup_paragraphs(joined)
+    return deduped
 
 
 def main():
@@ -82,7 +112,10 @@ def main():
     parser.add_argument("-o", "--output", default="data/corpus.txt")
     args = parser.parse_args()
 
-    corpus = build(args.files)
+    parts = [extract_file(path) for path in args.files]
+    joined = "\n\n".join(p for p in parts if p) + "\n"
+    corpus, dropped = dedup_paragraphs(joined)
+
     with open(args.output, "w", encoding="utf-8") as f:
         f.write(corpus)
 
@@ -91,6 +124,8 @@ def main():
     print(f"  {len(corpus):,} caracteres")
     print(f"  {len(corpus.split()):,} palavras (aprox.)")
     print(f"  {len(vocab)} caracteres distintos (vocabulário)")
+    if dropped:
+        print(f"  {dropped} parágrafo(s) duplicado(s) removido(s) entre as fontes")
 
 
 if __name__ == "__main__":

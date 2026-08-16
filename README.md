@@ -34,7 +34,7 @@ instalar_inicializacao.bat   liga o servidor sozinho com o Windows
 tools/build_corpus.py extrai texto de PDFs/TXT para montar o corpus
 tools/fetch_online_corpus.py busca texto da Wikipédia / Project Gutenberg
 data/corpus.txt       corpus de treino (gerado a partir de PDFs)
-tests/                autograd, BPE, treino incremental e vazamento de memória
+tests/                autograd, BPE, curadoria do corpus, treino incremental e vazamento de memória
 ```
 
 ## Manter a EVA atualizada (Windows)
@@ -324,6 +324,36 @@ acompanhe o crescimento do corpus no cartão "Memória da EVA" antes de
 adicionar muito de uma vez — corpus grande demais exige bem mais passos
 de treino para não ficar raso.
 
+### Curadoria: deduplicação automática
+
+Ao juntar várias fontes (PDFs, texto colado, downloads online), é comum
+algum parágrafo aparecer repetido — o mesmo prefácio em dois PDFs do
+mesmo livro, um trecho citado inteiro em outro artigo, etc. O
+`tools/build_corpus.py` remove essas duplicatas automaticamente ao
+montar o corpus (comparando parágrafos com 40+ caracteres, ignorando
+maiúsculas/espaçamento), e avisa quantas removeu:
+
+```bash
+python tools/build_corpus.py materials/*.pdf materials/*.txt -o data/corpus.txt
+# ... 3 parágrafo(s) duplicado(s) removido(s) entre as fontes
+```
+
+Parágrafos curtos (títulos, diálogos de uma linha) ficam de fora da
+checagem — eles repetem naturalmente e não são "lixo" de duplicação.
+
+### Sugestão: expandir mantendo o tema do corpus
+
+O corpus incluído mistura estratégia militar, algoritmos e modelos de
+linguagem — misturar assuntos aleatórios dilui isso. Para crescer *nessa
+mesma linha* (dá pra rodar o comando abaixo na sua máquina, com
+internet):
+
+```bash
+python tools/fetch_online_corpus.py --wikipedia "Estratégia militar,Sun Tzu,Teoria dos jogos,Aprendizado de máquina,Rede neural artificial,Processamento de linguagem natural,Estrutura de dados,Complexidade de algoritmos"
+python tools/fetch_online_corpus.py --gutenberg "Sun Tzu" --max-books 2
+python tools/build_corpus.py materials/*.pdf materials/*.txt -o data/corpus.txt
+```
+
 ## Uso por linha de comando
 
 Requisito mínimo: `numpy` (e `pymupdf` para ler PDFs).
@@ -346,16 +376,17 @@ PYTHONPATH=. python tests/test_autograd.py
 Escolha o tamanho com `--preset`. Modelos maiores aprendem padrões mais
 ricos, mas exigem mais tempo de CPU:
 
-| preset    | parâmetros | camadas | contexto | velocidade relativa      |
-|-----------|-----------:|:-------:|:--------:|:------------------------:|
-| `nano`    |    ~100 mil |    2    |    48    |  relâmpago               |
-| `small`   |    ~350 mil |    3    |    64    |  ~4x mais rápido         |
-| `medium`  |    ~1,8 mi  |    4    |    96    |  base                    |
-| `large`   |    ~4,8 mi  |    6    |   128    |  ~4x mais lento          |
-| `xlarge`  |    ~304 mi  |   24    |   256    |  exige GPU com ~6-8GB+   |
+| preset    | parâmetros | camadas | contexto | ~tempo p/ 1500 passos (CPU) |
+|-----------|-----------:|:-------:|:--------:|:----------------------------:|
+| `nano`    |    ~118 mil |    2    |    48    |  ~1 min (teste rápido)       |
+| `small`   |    ~826 mil |    4    |    96    |  ~20 min                     |
+| `medium`  |    ~3,1 mi  |    5    |    96    |  ~50 min (base)              |
+| `large`   |    ~8,7 mi  |    7    |   160    |  ~2,5 h                      |
+| `xlarge`  |    ~303 mi  |   24    |   256    |  exige GPU com ~6-8GB+       |
 
-Para experimentar rápido, use `nano` ou `small`. O painel web já vem com
-`small` selecionado por padrão.
+Os tempos são uma referência medida em CPU comum (4 núcleos); variam com
+sua máquina. Para experimentar rápido, use `nano` ou `small`. O painel web
+já vem com `small` selecionado por padrão.
 
 No painel, o cartão **📐 Resumo do modelo** mostra ao vivo — conforme você
 troca o preset/percepção — os parâmetros, arquitetura, contexto,
@@ -435,9 +466,15 @@ palavras hifenizadas e normaliza o espaçamento.
 
 ## Resultados
 
-Treinando o preset `medium` (~1,8 mi de parâmetros) por 2000 passos no
-corpus de ~231 mil caracteres (4 livros), a EVA sai de texto aleatório
-para português reconhecível:
+> Registro histórico do primeiro treino bem-sucedido, com a arquitetura
+> **GPT** original e o preset `medium` **da época** (~1,8 mi de
+> parâmetros — o preset foi recalibrado depois para ~3,1 mi, e a
+> arquitetura migrou para o estilo Llama; ver seções acima). Mantido aqui
+> como referência de que a mecânica funciona de ponta a ponta.
+
+Treinando o preset `medium` (~1,8 mi de parâmetros, arquitetura GPT) por
+2000 passos no corpus de ~231 mil caracteres (4 livros), a EVA sai de
+texto aleatório para português reconhecível:
 
 ```
 passo    1/2000 | treino 5.20 | val 4.88
@@ -509,7 +546,7 @@ corpus: estratégia militar, modelos de linguagem e programação.
    gradientes por backpropagation; o **AdamW** ajusta os pesos.
 6. **Geração** — amostra-se um caractere de cada vez, realimentando o modelo.
 
-O preset padrão (`medium`) tem ~1,8 milhão de parâmetros e roda em CPU.
+O preset padrão (`medium`) tem ~3,1 milhões de parâmetros e roda em CPU.
 
 ## Nota
 
