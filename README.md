@@ -26,6 +26,7 @@ eva/
 app.py                painel web (http.server) para uso local / Render / Docker
 chat.py               Sala de Conversa: interface de uso com streaming token a token
 conversar.bat         abre a Sala de Conversa no Windows (clique duplo)
+criar_atalhos.bat     cria atalhos da EVA na área de trabalho (Windows)
 train.py              script de treino e amostragem (com presets)
 check_gpu.py          autoteste de GPU (CPU vs CuPy)
 servidor.bat          sobe a EVA com senha, pronta para acesso remoto
@@ -49,7 +50,10 @@ cd EVA
 Depois é só clicar duas vezes:
 
 - **`iniciar.bat`** — instala o que falta e abre o painel no navegador.
+- **`conversar.bat`** — abre a Sala de Conversa (usar o modelo treinado).
 - **`atualizar.bat`** — baixa a versão mais recente do GitHub (`git pull`).
+- **`criar_atalhos.bat`** — coloca atalhos "EVA · Conversa" e "EVA · Painel"
+  na sua área de trabalho (rode uma vez).
 
 Seus materiais (`materials/`) e modelos treinados (`*.pkl`) ficam fora do
 controle de versão, então atualizar **nunca apaga o que você treinou**.
