@@ -1,14 +1,15 @@
 # EVA — uma IA construída do zero
 
-**EVA** é um modelo de linguagem (um *Transformer* estilo GPT) implementado
-inteiramente do zero em **NumPy puro** — sem PyTorch, sem TensorFlow. O
-objetivo é educacional: mostrar, peça por peça, como uma IA moderna que
-gera texto realmente funciona por dentro.
+**EVA** é um modelo de linguagem (um *Transformer* estilo **Llama**)
+implementado inteiramente do zero em **NumPy puro** — sem PyTorch, sem
+TensorFlow. O objetivo é educacional: mostrar, peça por peça, como uma IA
+moderna que gera texto realmente funciona por dentro.
 
 Tudo o que faz uma rede neural aprender está aqui e é legível:
 
 - **Diferenciação automática** (backpropagation) escrita à mão
-- **Atenção multi-cabeça causal** — o coração dos Transformers
+- **Atenção multi-cabeça causal com RoPE** — posições rotacionais, como no Llama
+- **RMSNorm** e **MLP SwiGLU** — os mesmos blocos do Llama, sem bias
 - **Otimizador AdamW** e recorte de gradiente
 - **Tokenizador** e laço de **treino** completos
 
@@ -18,11 +19,14 @@ Tudo o que faz uma rede neural aprender está aqui e é legível:
 eva/
   backend.py          seletor de array: NumPy (CPU) ou CuPy (GPU)
   autograd.py         motor de autograd (Tensor + backpropagation)
-  nn.py               camadas: Linear, LayerNorm, atenção, MLP, Block
-  model.py            o modelo GPT completo + geração de texto
+  nn.py               camadas: Linear, RMSNorm, atenção com RoPE, SwiGLU, Block
+  model.py            o modelo completo (arquitetura Llama) + geração de texto
   optim.py            otimizador AdamW e clip de gradiente
   tokenizer.py        tokenizador em nível de caractere
 app.py                painel web (http.server) para uso local / Render / Docker
+chat.py               Sala de Conversa: interface de uso com streaming token a token
+conversar.bat         abre a Sala de Conversa no Windows (clique duplo)
+criar_atalhos.bat     cria atalhos da EVA na área de trabalho (Windows)
 train.py              script de treino e amostragem (com presets)
 check_gpu.py          autoteste de GPU (CPU vs CuPy)
 servidor.bat          sobe a EVA com senha, pronta para acesso remoto
@@ -46,7 +50,10 @@ cd EVA
 Depois é só clicar duas vezes:
 
 - **`iniciar.bat`** — instala o que falta e abre o painel no navegador.
+- **`conversar.bat`** — abre a Sala de Conversa (usar o modelo treinado).
 - **`atualizar.bat`** — baixa a versão mais recente do GitHub (`git pull`).
+- **`criar_atalhos.bat`** — coloca atalhos "EVA · Conversa" e "EVA · Painel"
+  na sua área de trabalho (rode uma vez).
 
 Seus materiais (`materials/`) e modelos treinados (`*.pkl`) ficam fora do
 controle de versão, então atualizar **nunca apaga o que você treinou**.
@@ -72,6 +79,30 @@ No painel você pode:
 
 O material enviado fica em `materials/` e o corpus é montado a partir dele.
 Na primeira execução, o corpus atual é preservado como material inicial.
+
+## Sala de Conversa (interface de USO do modelo)
+
+Depois de treinar, use a interface dedicada a conversar com a EVA — mais
+rápida que o botão "Gerar" do painel, porque o cérebro é carregado **uma
+única vez** na memória e o texto surge **token a token**, ao vivo, conforme
+sai da rede:
+
+```bash
+python chat.py           # abre em http://localhost:8001
+```
+
+No Windows, é só clicar duas vezes em **`conversar.bat`**.
+
+- **Ficha do cérebro** — parâmetros, camadas, contexto e tokenizador do
+  checkpoint atual (recarrega sozinho se você treinar de novo)
+- **Regulagem** — temperatura (ousadia), top-k e quantidade de tokens
+- **Streaming de verdade** — cada token aparece assim que é amostrado;
+  dá para interromper no meio com "Parar"
+
+Lembre: a EVA é um modelo de **continuação** — ela prolonga o texto que
+você começar, no estilo do corpus em que treinou (não segue instruções
+como um chat assistente). Para exigir senha ao acessar de outra máquina,
+defina `EVA_PASSWORD` (usuário `eva`), como no painel.
 
 ## Treino incremental (continuar o cérebro salvo)
 
@@ -466,10 +497,12 @@ corpus: estratégia militar, modelos de linguagem e programação.
 ## Como a EVA funciona (visão geral)
 
 1. **Tokenização** — o texto vira uma sequência de inteiros (um por caractere).
-2. **Embeddings** — cada token e sua posição viram vetores.
-3. **Blocos Transformer** — cada bloco tem *atenção causal* (cada posição
-   olha só para o passado) seguida de uma pequena rede feed-forward, ambas
-   com conexões residuais e LayerNorm.
+2. **Embeddings** — cada token vira um vetor; a *posição* não é somada ao
+   embedding: ela entra na atenção via **RoPE** (rotação de Q e K), como no
+   Llama.
+3. **Blocos Transformer (estilo Llama)** — cada bloco tem *atenção causal*
+   (cada posição olha só para o passado) seguida de uma rede feed-forward
+   **SwiGLU**, ambas com conexões residuais e pré-**RMSNorm**.
 4. **Cabeça de saída** — projeta para o vocabulário; o *softmax* dá a
    probabilidade do próximo caractere.
 5. **Treino** — a *entropia cruzada* mede o erro; o **autograd** calcula os

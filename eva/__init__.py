@@ -1,10 +1,10 @@
 """EVA — uma IA (modelo de linguagem) construída do zero em NumPy puro.
 
-Pacote com todas as peças de um Transformer decoder estilo GPT:
+Pacote com todas as peças de um Transformer decoder estilo Llama:
 
 - `autograd`  : motor de diferenciação automática (backpropagation)
-- `nn`        : camadas (Linear, LayerNorm, atenção, MLP, blocos)
-- `model`     : o modelo GPT completo, com geração de texto
+- `nn`        : camadas (Linear, RMSNorm, atenção com RoPE, MLP SwiGLU, blocos)
+- `model`     : o modelo completo (arquitetura Llama), com geração de texto
 - `optim`     : otimizadores (AdamW, SGDMomentum) e clipping de gradiente
 - `tokenizer` : tokenizador em nível de caractere
 - `bpe`       : tokenizador BPE (subpalavras), estilo GPT
