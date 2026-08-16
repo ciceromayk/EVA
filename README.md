@@ -466,11 +466,41 @@ palavras hifenizadas e normaliza o espaçamento.
 
 ## Resultados
 
-> Registro histórico do primeiro treino bem-sucedido, com a arquitetura
-> **GPT** original e o preset `medium` **da época** (~1,8 mi de
-> parâmetros — o preset foi recalibrado depois para ~3,1 mi, e a
-> arquitetura migrou para o estilo Llama; ver seções acima). Mantido aqui
-> como referência de que a mecânica funciona de ponta a ponta.
+### Arquitetura atual (Llama: RoPE + RMSNorm + SwiGLU)
+
+Treinando o preset `medium` **recalibrado** (~3,1 mi de parâmetros) por
+1500 passos no mesmo corpus de ~231 mil caracteres, em CPU comum:
+
+```
+passo    1/1500 | treino 5.49 | val 5.26
+passo  700/1500 | treino 1.64 | val 1.80
+passo 1500/1500 | treino 1.35 | val 1.54
+```
+
+Tempo total: **~38 min**. Val loss final **1,54** — melhor que o treino
+histórico abaixo (val 1,57), com um preset menor (3,1 mi vs. o teto de
+memória de então) e menos passos, graças à arquitetura Llama.
+
+Amostra gerada (continuação livre, sem prompt específico):
+
+> A suas envocainidos se meia de terreno de enviança em três de 2023.
+> Consultado em 23 de junho de 2026. Cópia arquivada em 15 de jenho de
+> 2023 (https://web.archive.org/web/...) 15. Le, Johan; Albo, Defford
+> (2025). «Art overre and Multimodal Intelligence...»
+
+Chama atenção o modelo já reproduzir a *forma* de uma referência
+bibliográfica (data, "Consultado em", "Cópia arquivada em", DOI/URL) —
+esse padrão vem do material sobre modelos de linguagem no corpus, que
+tem muitas notas de rodapé nesse formato. É esperado num modelo desse
+tamanho: aprende a estrutura superficial antes do significado.
+
+### Registro histórico (arquitetura GPT, antes da migração)
+
+> Primeiro treino bem-sucedido do projeto, com a arquitetura **GPT**
+> original e o preset `medium` **da época** (~1,8 mi de parâmetros — bem
+> menor que o `medium` atual). Mantido aqui como referência de que a
+> mecânica sempre funcionou de ponta a ponta, mesmo antes da migração
+> para Llama.
 
 Treinando o preset `medium` (~1,8 mi de parâmetros, arquitetura GPT) por
 2000 passos no corpus de ~231 mil caracteres (4 livros), a EVA sai de
