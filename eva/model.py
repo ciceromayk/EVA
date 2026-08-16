@@ -81,9 +81,13 @@ class GPT(Module):
         return logits, loss
 
     @no_grad()
-    def generate(self, idx: np.ndarray, max_new_tokens: int, temperature: float = 1.0,
-                 top_k: int | None = None, rng: np.random.Generator | None = None):
-        """Gera `max_new_tokens` continuando a partir de `idx` (1, T)."""
+    def stream(self, idx: np.ndarray, max_new_tokens: int, temperature: float = 1.0,
+               top_k: int | None = None, rng: np.random.Generator | None = None):
+        """Gera e ENTREGA um token por vez (generator) — base do chat ao vivo.
+
+        Mesma amostragem do `generate()`, mas cada token novo é `yield`ado
+        assim que sai do modelo, permitindo mostrar o texto surgindo.
+        """
         rng = rng or _np.random.default_rng()
         idx = _np.asarray(idx)  # o histórico de tokens fica na CPU (é leve)
         for _ in range(max_new_tokens):
@@ -99,9 +103,16 @@ class GPT(Module):
             logits -= logits.max(axis=-1, keepdims=True)
             probs = _np.exp(logits)
             probs /= probs.sum(axis=-1, keepdims=True)
-            next_id = rng.choice(self.config.vocab_size, p=probs[0])
+            next_id = int(rng.choice(self.config.vocab_size, p=probs[0]))
             idx = _np.concatenate([idx, [[next_id]]], axis=1)
-        return idx
+            yield next_id
+
+    def generate(self, idx: np.ndarray, max_new_tokens: int, temperature: float = 1.0,
+                 top_k: int | None = None, rng: np.random.Generator | None = None):
+        """Gera `max_new_tokens` continuando a partir de `idx` (1, T)."""
+        idx = _np.asarray(idx)
+        new = list(self.stream(idx, max_new_tokens, temperature, top_k, rng))
+        return _np.concatenate([idx, [new]], axis=1)
 
     def num_params(self) -> int:
         return sum(int(p.data.size) for p in self.parameters())

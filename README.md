@@ -24,6 +24,8 @@ eva/
   optim.py            otimizador AdamW e clip de gradiente
   tokenizer.py        tokenizador em nível de caractere
 app.py                painel web (http.server) para uso local / Render / Docker
+chat.py               Sala de Conversa: interface de uso com streaming token a token
+conversar.bat         abre a Sala de Conversa no Windows (clique duplo)
 train.py              script de treino e amostragem (com presets)
 check_gpu.py          autoteste de GPU (CPU vs CuPy)
 servidor.bat          sobe a EVA com senha, pronta para acesso remoto
@@ -73,6 +75,30 @@ No painel você pode:
 
 O material enviado fica em `materials/` e o corpus é montado a partir dele.
 Na primeira execução, o corpus atual é preservado como material inicial.
+
+## Sala de Conversa (interface de USO do modelo)
+
+Depois de treinar, use a interface dedicada a conversar com a EVA — mais
+rápida que o botão "Gerar" do painel, porque o cérebro é carregado **uma
+única vez** na memória e o texto surge **token a token**, ao vivo, conforme
+sai da rede:
+
+```bash
+python chat.py           # abre em http://localhost:8001
+```
+
+No Windows, é só clicar duas vezes em **`conversar.bat`**.
+
+- **Ficha do cérebro** — parâmetros, camadas, contexto e tokenizador do
+  checkpoint atual (recarrega sozinho se você treinar de novo)
+- **Regulagem** — temperatura (ousadia), top-k e quantidade de tokens
+- **Streaming de verdade** — cada token aparece assim que é amostrado;
+  dá para interromper no meio com "Parar"
+
+Lembre: a EVA é um modelo de **continuação** — ela prolonga o texto que
+você começar, no estilo do corpus em que treinou (não segue instruções
+como um chat assistente). Para exigir senha ao acessar de outra máquina,
+defina `EVA_PASSWORD` (usuário `eva`), como no painel.
 
 ## Treino incremental (continuar o cérebro salvo)
 
