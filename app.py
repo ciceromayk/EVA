@@ -109,7 +109,7 @@ def _size_fields(param_count: int, optimizer: str = "adamw", batch_size: int = 1
     }
 
 
-def _gpt_param_count(vocab_size: int, block_size: int, n_layer: int, n_embd: int) -> int:
+def _gpt_param_count(vocab_size: int, _block_size: int, n_layer: int, n_embd: int) -> int:
     """Conta os parâmetros da EVA ANALITICAMENTE (sem construir o modelo).
 
     Construir o modelo de verdade só para chamar .num_params() aloca todos

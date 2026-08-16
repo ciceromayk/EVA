@@ -282,7 +282,10 @@ class Tensor:
         de calcular (uma sigmoide em vez de uma tanh de polinômio).
         """
         x = self.data
-        sig = 1.0 / (1.0 + np.exp(-x))
+        # sigmoide numericamente estável: exp só recebe valores <= 0, então
+        # nunca estoura (overflow) mesmo para |x| grande.
+        e = np.exp(-np.abs(x))
+        sig = np.where(x >= 0, 1.0 / (1.0 + e), e / (1.0 + e))
         data = x * sig
 
         def backward(grad):
@@ -481,6 +484,7 @@ def rope(x: Tensor, cos: np.ndarray, sin: np.ndarray) -> Tensor:
     (T, head_dim/2) e são pré-computados (não são parâmetros treináveis).
     """
     xd = x.data
+    assert xd.shape[-1] % 2 == 0, "rope: a última dimensão (head_dim) precisa ser par"
     half = xd.shape[-1] // 2
     x1, x2 = xd[..., :half], xd[..., half:]
     data = np.concatenate([x1 * cos - x2 * sin, x1 * sin + x2 * cos], axis=-1)
