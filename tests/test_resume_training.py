@@ -17,6 +17,7 @@ def make_args(data_path, resume=False, steps=20, seed=0):
         dropout=0.0, device="cpu", optimizer="adamw", resume=resume, steps=steps,
         batch_size=8, block_size=32, n_layer=1, n_head=1, n_embd=16,
         lr=3e-3, log_every=10, seed=seed, generate=None, max_new=10,
+        temperature=0.8, top_k=10, top_p=None, repetition_penalty=1.15,
     )
 
 

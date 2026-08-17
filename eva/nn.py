@@ -125,6 +125,13 @@ class CausalSelfAttention(Module):
         self.head_dim = dim // n_heads
         self.qkv = Linear(dim, 3 * dim, bias=False)
         self.proj = Linear(dim, dim, bias=False)
+        # QK-Norm: RMSNorm em cada vetor de Q e K, por cabeça, antes do RoPE
+        # e do produto escalar. Técnica da linhagem Llama mais recente
+        # (Llama 4, e também Gemma2/Qwen) — mantém a escala de Q·K sob
+        # controle conforme o modelo cresce, evitando que a atenção
+        # "exploda" em modelos maiores/mais profundos.
+        self.q_norm = RMSNorm(self.head_dim)
+        self.k_norm = RMSNorm(self.head_dim)
 
     def forward(self, x: Tensor, cos: np.ndarray, sin: np.ndarray) -> Tensor:
         B, T, C = x.shape
@@ -133,6 +140,9 @@ class CausalSelfAttention(Module):
         q = qkv[:, :, :C].reshape(B, T, self.n_heads, self.head_dim).transpose(0, 2, 1, 3)
         k = qkv[:, :, C:2 * C].reshape(B, T, self.n_heads, self.head_dim).transpose(0, 2, 1, 3)
         v = qkv[:, :, 2 * C:].reshape(B, T, self.n_heads, self.head_dim).transpose(0, 2, 1, 3)
+
+        q = self.q_norm(q)
+        k = self.k_norm(k)
 
         # RoPE: rotaciona Q e K pela posição (V fica intacto)
         q = rope(q, cos, sin)

@@ -2,9 +2,10 @@
 
 Junta as peças de `nn.py` em um Transformer decoder completo, com a
 arquitetura do Llama: embeddings de token (posições entram via RoPE na
-atenção), uma pilha de blocos pré-RMSNorm com MLP SwiGLU, RMSNorm final
-e uma cabeça de projeção para o vocabulário. Inclui `generate()` para
-amostragem autoregressiva de texto.
+atenção, com QK-Norm estabilizando Q e K), uma pilha de blocos pré-RMSNorm
+com MLP SwiGLU, RMSNorm final e uma cabeça de projeção para o vocabulário.
+Inclui `generate()`/`stream()` para amostragem autoregressiva de texto,
+com temperatura, top-k, nucleus (top-p) e penalidade de repetição.
 """
 
 from __future__ import annotations
@@ -31,6 +32,51 @@ class GPTConfig:
     n_embd: int = 96          # dimensão dos embeddings
     dropout: float = 0.0      # regularização (0 = desligado)
     rope_base: float = 10000.0  # base das frequências do RoPE (Llama usa 10000)
+
+
+def sample_probs(logits: _np.ndarray, generated_ids: _np.ndarray, temperature: float = 1.0,
+                  top_k: int | None = None, top_p: float | None = None,
+                  repetition_penalty: float = 1.0) -> _np.ndarray:
+    """Transforma logits crus (1 posição, vocab_size) em probabilidades de
+    amostragem, na ordem estilo Llama/HF: penalidade de repetição ->
+    temperatura -> top-k -> top-p (nucleus). Função pura em NumPy (sem
+    Tensor/autograd) — só decide COMO amostrar, não participa do treino.
+
+    `logits` é mutado in-place (quem chama já deve passar uma cópia).
+
+    - `repetition_penalty` (1.0 = desligado): reduz a chance de tokens já
+      presentes em `generated_ids` — combate o "eeeee..." de modelos
+      pequenos entrando em loop.
+    - `top_p` (None = desligado): mantém só o menor conjunto de tokens cuja
+      probabilidade acumulada cobre `top_p` (ex.: 0.9), descartando a cauda
+      improvável — o "nucleus sampling" do GPT-3/Llama.
+    """
+    if repetition_penalty != 1.0:
+        for tid in set(_np.asarray(generated_ids).tolist()):
+            logits[tid] = (logits[tid] / repetition_penalty if logits[tid] > 0
+                           else logits[tid] * repetition_penalty)
+
+    logits /= max(temperature, 1e-8)
+
+    if top_k is not None:
+        kth = _np.sort(logits)[-top_k]
+        logits[logits < kth] = -_np.inf
+
+    logits -= logits.max()
+    probs = _np.exp(logits)
+    probs /= probs.sum()
+
+    if top_p is not None:
+        order = _np.argsort(-probs)
+        cumulative = _np.cumsum(probs[order])
+        # menor prefixo cuja soma cobre top_p; sempre mantém >= 1 token
+        cutoff = max(int(_np.searchsorted(cumulative, top_p)) + 1, 1)
+        mask = _np.zeros_like(probs, dtype=bool)
+        mask[order[:cutoff]] = True
+        probs = _np.where(mask, probs, 0.0)
+        probs /= probs.sum()
+
+    return probs
 
 
 class GPT(Module):
@@ -82,36 +128,39 @@ class GPT(Module):
 
     @no_grad()
     def stream(self, idx: np.ndarray, max_new_tokens: int, temperature: float = 1.0,
-               top_k: int | None = None, rng: np.random.Generator | None = None):
+               top_k: int | None = None, top_p: float | None = None,
+               repetition_penalty: float = 1.0, rng: np.random.Generator | None = None):
         """Gera e ENTREGA um token por vez (generator) — base do chat ao vivo.
 
-        Mesma amostragem do `generate()`, mas cada token novo é `yield`ado
-        assim que sai do modelo, permitindo mostrar o texto surgindo.
+        Amostragem estilo Llama/HF (ver `sample_probs`). Cada token novo é
+        `yield`ado assim que sai do modelo, permitindo mostrar o texto
+        surgindo. Assume uma única sequência por vez (idx tem shape (1, T)).
         """
         rng = rng or _np.random.default_rng()
         idx = _np.asarray(idx)  # o histórico de tokens fica na CPU (é leve)
         for _ in range(max_new_tokens):
             context = idx[:, -self.config.block_size:]
             logits, _ = self.forward(context)
-            # a amostragem é feita na CPU (numpy): traz só a última linha
-            logits = asnumpy(logits.data[:, -1, :]) / max(temperature, 1e-8)
+            # a amostragem é feita na CPU (numpy): traz só a última linha.
+            # .copy() é necessário: sample_probs muta `logits` in-place
+            # (penalidade de repetição) e a fatia pode ser só uma VIEW dos
+            # dados internos do tensor — mutar sem copiar corromperia o
+            # grafo/reuso de memória do forward.
+            logits = asnumpy(logits.data[:, -1, :])[0].copy()  # (vocab_size,)
+            probs = sample_probs(logits, idx[0], temperature, top_k, top_p,
+                                 repetition_penalty)
 
-            if top_k is not None:
-                kth = _np.sort(logits, axis=-1)[:, -top_k][:, None]
-                logits = _np.where(logits < kth, -_np.inf, logits)
-
-            logits -= logits.max(axis=-1, keepdims=True)
-            probs = _np.exp(logits)
-            probs /= probs.sum(axis=-1, keepdims=True)
-            next_id = int(rng.choice(self.config.vocab_size, p=probs[0]))
+            next_id = int(rng.choice(self.config.vocab_size, p=probs))
             idx = _np.concatenate([idx, [[next_id]]], axis=1)
             yield next_id
 
     def generate(self, idx: np.ndarray, max_new_tokens: int, temperature: float = 1.0,
-                 top_k: int | None = None, rng: np.random.Generator | None = None):
+                 top_k: int | None = None, top_p: float | None = None,
+                 repetition_penalty: float = 1.0, rng: np.random.Generator | None = None):
         """Gera `max_new_tokens` continuando a partir de `idx` (1, T)."""
         idx = _np.asarray(idx)
-        new = list(self.stream(idx, max_new_tokens, temperature, top_k, rng))
+        new = list(self.stream(idx, max_new_tokens, temperature, top_k, top_p,
+                               repetition_penalty, rng))
         return _np.concatenate([idx, [new]], axis=1)
 
     def num_params(self) -> int:

@@ -68,7 +68,8 @@ def brain_info() -> dict:
             "vocab_size": cfg.vocab_size, "tokenizer": "bpe" if kind == "bpe" else "char"}
 
 
-def stream_reply(prompt: str, max_tokens: int, temperature: float, top_k: int):
+def stream_reply(prompt: str, max_tokens: int, temperature: float, top_k: int,
+                  top_p: float, repetition_penalty: float):
     """Generator de PEDAÇOS DE TEXTO novos, prontos para enviar ao navegador.
 
     Decodifica o histórico inteiro a cada token e emite só o sufixo novo —
@@ -81,7 +82,9 @@ def stream_reply(prompt: str, max_tokens: int, temperature: float, top_k: int):
     sent = ""
     for tid in model.stream(np.array([ids], dtype=np.int64), max_tokens,
                             temperature=max(temperature, 1e-3),
-                            top_k=top_k if top_k > 0 else None):
+                            top_k=top_k if top_k > 0 else None,
+                            top_p=top_p if top_p and top_p < 1.0 else None,
+                            repetition_penalty=repetition_penalty):
         new_ids.append(tid)
         text = tokenizer.decode(new_ids)
         if text.startswith(sent) and len(text) > len(sent):
@@ -169,6 +172,8 @@ class Handler(BaseHTTPRequestHandler):
             max_tokens = min(max(int(data.get("max_tokens", 300)), 1), 2000)
             temperature = float(data.get("temperature", 0.8))
             top_k = int(data.get("top_k", 10))
+            top_p = float(data.get("top_p", 0) or 0)
+            repetition_penalty = max(float(data.get("repetition_penalty", 1.15)), 1.0)
 
             # Resposta SEM Content-Length: em HTTP/1.0 o fim da conexão marca
             # o fim do corpo, e o navegador lê os pedaços conforme chegam.
@@ -178,7 +183,8 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("X-Accel-Buffering", "no")
             self.end_headers()
             try:
-                for chunk in stream_reply(prompt, max_tokens, temperature, top_k):
+                for chunk in stream_reply(prompt, max_tokens, temperature, top_k,
+                                          top_p, repetition_penalty):
                     self.wfile.write(chunk.encode("utf-8"))
                     self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError):
@@ -323,7 +329,8 @@ button{font-family:var(--mono);cursor:pointer;border-radius:3px;font-size:13px;
       <h2>Ficha do cérebro</h2>
       <div id="specs"><div class="spec"><span class="k">estado</span><span class="v">consultando…</span></div></div>
       <div class="badges"><span class="badge">RoPE</span><span class="badge">RMSNorm</span>
-        <span class="badge">SwiGLU</span><span class="badge">sem bias</span></div>
+        <span class="badge">QK-Norm</span><span class="badge">SwiGLU</span>
+        <span class="badge">sem bias</span></div>
     </div>
     <div class="card">
       <h2>Regulagem</h2>
@@ -334,6 +341,12 @@ button{font-family:var(--mono);cursor:pointer;border-radius:3px;font-size:13px;
         <output id="tempval">0.80</output></div>
       <label for="topk">Top-k <i style="text-transform:none;letter-spacing:0">(0 = livre)</i></label>
       <input type="number" id="topk" value="10" min="0" max="500">
+      <label for="topp">Top-p / nucleus <i style="text-transform:none;letter-spacing:0">(0 = desligado)</i></label>
+      <div class="rangerow"><input type="range" id="topp" min="0" max="1" step="0.05" value="0">
+        <output id="toppval">off</output></div>
+      <label for="reppen">Anti-repetição <i style="text-transform:none;letter-spacing:0">(1.0 = desligado)</i></label>
+      <div class="rangerow"><input type="range" id="reppen" min="1" max="2" step="0.05" value="1.15">
+        <output id="reppenval">1.15</output></div>
     </div>
     <div class="card">
       <h2>Como conversar</h2>
@@ -412,7 +425,8 @@ async function send(){
     const res=await fetch('/generate',{method:'POST',signal:controller.signal,
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({prompt,max_tokens:+$('maxtok').value,
-        temperature:+$('temp').value,top_k:+$('topk').value})});
+        temperature:+$('temp').value,top_k:+$('topk').value,
+        top_p:+$('topp').value,repetition_penalty:+$('reppen').value})});
     if(!res.ok){
       const err=await res.json().catch(()=>({error:'erro '+res.status}));
       evaSpan.innerHTML=` <span class="error">${esc(err.error||'falhou')}</span>`;
@@ -439,6 +453,8 @@ $('prompt').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
 });
 $('temp').oninput=()=>$('tempval').value=(+$('temp').value).toFixed(2);
+$('topp').oninput=()=>{const v=+$('topp').value;$('toppval').value=v===0?'off':v.toFixed(2);};
+$('reppen').oninput=()=>$('reppenval').value=(+$('reppen').value).toFixed(2);
 loadInfo();
 setInterval(loadInfo,15000);
 </script>

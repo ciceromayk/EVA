@@ -12,7 +12,7 @@ Pacote com todas as peças de um Transformer decoder estilo Llama:
 
 from .autograd import Tensor, cross_entropy, no_grad, softmax
 from .bpe import BPETokenizer
-from .model import GPT, GPTConfig
+from .model import GPT, GPTConfig, sample_probs
 from .optim import AdamW, SGDMomentum, clip_grad_norm
 from .tokenizer import CharTokenizer
 
@@ -23,6 +23,7 @@ __all__ = [
     "softmax",
     "GPT",
     "GPTConfig",
+    "sample_probs",
     "AdamW",
     "SGDMomentum",
     "clip_grad_norm",

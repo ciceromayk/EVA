@@ -9,9 +9,13 @@ Tudo o que faz uma rede neural aprender está aqui e é legível:
 
 - **Diferenciação automática** (backpropagation) escrita à mão
 - **Atenção multi-cabeça causal com RoPE** — posições rotacionais, como no Llama
-- **RMSNorm** e **MLP SwiGLU** — os mesmos blocos do Llama, sem bias
+- **RMSNorm**, **QK-Norm** e **MLP SwiGLU** — os mesmos blocos das versões
+  mais recentes do Llama, sem bias
+- **Amostragem estilo Llama/GPT-3**: temperatura, top-k, **nucleus (top-p)**
+  e penalidade de repetição
+- **Tokenizador BPE (subpalavras) por padrão** — como todo LLM moderno
 - **Otimizador AdamW** e recorte de gradiente
-- **Tokenizador** e laço de **treino** completos
+- Laço de **treino** completo, com checkpoint, retomada e amostragem
 
 ## Estrutura
 
@@ -95,7 +99,8 @@ No Windows, é só clicar duas vezes em **`conversar.bat`**.
 
 - **Ficha do cérebro** — parâmetros, camadas, contexto e tokenizador do
   checkpoint atual (recarrega sozinho se você treinar de novo)
-- **Regulagem** — temperatura (ousadia), top-k e quantidade de tokens
+- **Regulagem** — temperatura (ousadia), top-k, **top-p/nucleus** e
+  **anti-repetição**, além da quantidade de tokens
 - **Streaming de verdade** — cada token aparece assim que é amostrado;
   dá para interromper no meio com "Parar"
 
@@ -436,12 +441,21 @@ de você clicar em treinar — se aparecer um número maior que sua placa,
 
 ### Tokenizador e regularização
 
+Desde a migração para Llama, **BPE (subpalavras) é o tokenizador padrão**
+— é assim que o Llama real funciona (e todo LLM moderno): tokens que
+representam pedaços de palavra, não letra por letra. Um token de contexto
+carrega muito mais texto, e o modelo aprende a gerar *palavras inteiras*
+em vez de soletrar.
+
 ```bash
-# subpalavras (BPE) com dropout — gera palavras inteiras, sem soletrar
-python train.py --tokenizer bpe --bpe-vocab 512 --dropout 0.2 --steps 2000
+# padrão atual: BPE com dropout — gera palavras inteiras, sem soletrar
+python train.py --bpe-vocab 512 --dropout 0.2 --steps 2000
+
+# para voltar ao tokenizador de caractere (mais simples de inspecionar)
+python train.py --tokenizer char --steps 2000
 ```
 
-- `--tokenizer {char,bpe}`: caractere (padrão) ou subpalavras
+- `--tokenizer {bpe,char}`: subpalavras (padrão, como o Llama) ou caractere
 - `--bpe-vocab N`: tamanho do vocabulário BPE (≥ 256)
 - `--dropout P`: taxa de dropout (regularização; padrão 0,1)
 - `--optimizer {adamw,sgd}`: AdamW (padrão, converge melhor) ou SGD+momentum
@@ -563,18 +577,22 @@ corpus: estratégia militar, modelos de linguagem e programação.
 
 ## Como a EVA funciona (visão geral)
 
-1. **Tokenização** — o texto vira uma sequência de inteiros (um por caractere).
+1. **Tokenização** — o texto vira uma sequência de inteiros (por padrão,
+   pedaços de palavra via **BPE** — subpalavras, como no Llama real).
 2. **Embeddings** — cada token vira um vetor; a *posição* não é somada ao
    embedding: ela entra na atenção via **RoPE** (rotação de Q e K), como no
    Llama.
 3. **Blocos Transformer (estilo Llama)** — cada bloco tem *atenção causal*
-   (cada posição olha só para o passado) seguida de uma rede feed-forward
-   **SwiGLU**, ambas com conexões residuais e pré-**RMSNorm**.
+   com **QK-Norm** (estabiliza Q e K antes do produto escalar), seguida de
+   uma rede feed-forward **SwiGLU**, ambas com conexões residuais e
+   pré-**RMSNorm**.
 4. **Cabeça de saída** — projeta para o vocabulário; o *softmax* dá a
-   probabilidade do próximo caractere.
+   probabilidade do próximo token.
 5. **Treino** — a *entropia cruzada* mede o erro; o **autograd** calcula os
    gradientes por backpropagation; o **AdamW** ajusta os pesos.
-6. **Geração** — amostra-se um caractere de cada vez, realimentando o modelo.
+6. **Geração** — amostra-se um token de cada vez, realimentando o modelo;
+   temperatura, top-k, **top-p (nucleus)** e penalidade de repetição
+   controlam a ousadia e evitam loops, como no Llama/GPT-3.
 
 O preset padrão (`medium`) tem ~3,1 milhões de parâmetros e roda em CPU.
 

@@ -109,7 +109,8 @@ def _size_fields(param_count: int, optimizer: str = "adamw", batch_size: int = 1
     }
 
 
-def _gpt_param_count(vocab_size: int, _block_size: int, n_layer: int, n_embd: int) -> int:
+def _gpt_param_count(vocab_size: int, _block_size: int, n_layer: int, n_embd: int,
+                      n_head: int) -> int:
     """Conta os parâmetros da EVA ANALITICAMENTE (sem construir o modelo).
 
     Construir o modelo de verdade só para chamar .num_params() aloca todos
@@ -117,11 +118,12 @@ def _gpt_param_count(vocab_size: int, _block_size: int, n_layer: int, n_embd: in
     para uma estimativa que o painel pede a cada troca de preset. A fórmula
     replica exatamente a arquitetura Llama de eva/nn.py e eva/model.py:
     embedding de token (posições via RoPE, sem parâmetros), por camada
-    (RMSNorm x2, atenção qkv+proj sem bias, MLP SwiGLU gate+up+down),
-    RMSNorm final e a cabeça de saída.
+    (RMSNorm x2, atenção qkv+proj sem bias + QK-Norm x2, MLP SwiGLU
+    gate+up+down), RMSNorm final e a cabeça de saída.
     """
+    head_dim = n_embd // n_head
     hidden = swiglu_hidden(n_embd)
-    per_layer = 4 * n_embd * n_embd + 3 * n_embd * hidden + 2 * n_embd
+    per_layer = 4 * n_embd * n_embd + 3 * n_embd * hidden + 2 * n_embd + 2 * head_dim
     return (2 * vocab_size * n_embd) + n_layer * per_layer + n_embd
 
 
@@ -133,7 +135,8 @@ def estimate_model_info(preset: str, tokenizer_kind: str, optimizer: str = "adam
     vocab_size = 512 if tokenizer_kind == "bpe" else max(corpus_stats()["vocab"], 2)
     config = GPTConfig(vocab_size=vocab_size, block_size=cfg["block_size"],
                        n_layer=cfg["n_layer"], n_head=cfg["n_head"], n_embd=cfg["n_embd"])
-    params = _gpt_param_count(vocab_size, cfg["block_size"], cfg["n_layer"], cfg["n_embd"])
+    params = _gpt_param_count(vocab_size, cfg["block_size"], cfg["n_layer"], cfg["n_embd"],
+                              cfg["n_head"])
     return {
         **_size_fields(params, optimizer, cfg["batch_size"], cfg["block_size"],
                        cfg["n_layer"], cfg["n_embd"]),
@@ -208,7 +211,7 @@ def start_training(opts: dict) -> tuple[bool, str]:
         else:
             cmd += [
                 "--preset", str(opts.get("preset", "medium")),
-                "--tokenizer", str(opts.get("tokenizer", "char")),
+                "--tokenizer", str(opts.get("tokenizer", "bpe")),
                 "--dropout", str(float(opts.get("dropout", 0.1))),
             ]
             if opts.get("tokenizer") == "bpe":
@@ -362,7 +365,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/model_info":
                 data = json.loads(self._body() or b"{}")
                 preset = str(data.get("preset", "medium"))
-                tokenizer = str(data.get("tokenizer", "char"))
+                tokenizer = str(data.get("tokenizer", "bpe"))
                 optimizer = str(data.get("optimizer", "adamw"))
                 try:
                     info = estimate_model_info(preset, tokenizer, optimizer)
@@ -636,7 +639,7 @@ pre{background:#04060d;border:1px solid var(--line);border-radius:12px;padding:1
         <option value="xlarge">xlarge · ~300M (GPU forte)</option></select></div>
       <div class="archonly"><label>Percepção</label><select id="tokenizer">
         <option value="char">char · letra a letra</option>
-        <option value="bpe">bpe · subpalavras</option></select></div>
+        <option value="bpe" selected>bpe · subpalavras (como o Llama)</option></select></div>
       <div><label>Ciclos (passos)</label><input type="number" id="steps" value="1000" min="100" step="100"></div>
       <div class="archonly"><label>Dropout</label><input type="number" id="dropout" value="0.1" min="0" max="0.9" step="0.05"></div>
       <div><label>Otimizador</label><select id="optimizer">

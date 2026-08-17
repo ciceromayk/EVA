@@ -228,7 +228,9 @@ def train(args) -> None:
     print(f"\nMelhor val loss: {best_val:.4f} | checkpoint em {CKPT_PATH}\n")
     # amostra usando o melhor modelo salvo (não o último, possivelmente overfit)
     best_model, tokenizer = load_checkpoint()
-    sample(best_model, tokenizer, prompt="A ", max_new_tokens=300, rng=rng)
+    sample(best_model, tokenizer, prompt="A ", max_new_tokens=300, rng=rng,
+           temperature=args.temperature, top_k=args.top_k, top_p=args.top_p,
+           repetition_penalty=args.repetition_penalty)
 
 
 def estimate_val_loss(model, val_data, config, batch_size, rng, iters=5):
@@ -244,11 +246,13 @@ def estimate_val_loss(model, val_data, config, batch_size, rng, iters=5):
     return total / iters
 
 
-def sample(model, tokenizer, prompt, max_new_tokens, rng=None):
+def sample(model, tokenizer, prompt, max_new_tokens, rng=None, temperature=0.8,
+           top_k=10, top_p=None, repetition_penalty=1.15):
     rng = rng or np.random.default_rng()
     context = np.array([tokenizer.encode(prompt) or [0]], dtype=np.int64)
-    out = model.generate(context, max_new_tokens=max_new_tokens,
-                         temperature=0.8, top_k=10, rng=rng)
+    out = model.generate(context, max_new_tokens=max_new_tokens, temperature=temperature,
+                         top_k=top_k, top_p=top_p, repetition_penalty=repetition_penalty,
+                         rng=rng)
     print("--- amostra gerada ---")
     print(tokenizer.decode(out[0]))
     print("----------------------")
@@ -259,8 +263,9 @@ def main():
     parser.add_argument("--data", default="data/corpus.txt")
     parser.add_argument("--preset", choices=list(PRESETS), default="medium",
                         help="tamanho do modelo (padrão: medium)")
-    parser.add_argument("--tokenizer", choices=["char", "bpe"], default="char",
-                        help="char (1 token/letra) ou bpe (subpalavras)")
+    parser.add_argument("--tokenizer", choices=["char", "bpe"], default="bpe",
+                        help="bpe (subpalavras, como o Llama real; padrão) ou "
+                             "char (1 token/letra)")
     parser.add_argument("--bpe-vocab", type=int, default=512,
                         help="tamanho do vocabulário BPE (>= 256)")
     parser.add_argument("--dropout", type=float, default=0.1,
@@ -287,6 +292,17 @@ def main():
                         help="gera texto a partir do checkpoint salvo e sai")
     parser.add_argument("--max-new", type=int, default=300,
                         help="tokens a gerar no modo --generate")
+    parser.add_argument("--temperature", type=float, default=0.8,
+                        help="ousadia da amostragem (padrão: 0.8)")
+    parser.add_argument("--top-k", type=int, default=10,
+                        help="mantém só os k tokens mais prováveis (padrão: 10)")
+    parser.add_argument("--top-p", type=float, default=None,
+                        help="nucleus sampling: mantém o menor conjunto de tokens "
+                             "cuja probabilidade acumulada cobre p (ex.: 0.9). "
+                             "Desligado por padrão; combina com --top-k")
+    parser.add_argument("--repetition-penalty", type=float, default=1.15,
+                        help="penaliza tokens já usados no texto gerado, para não "
+                             "entrar em loop (1.0 desliga; padrão: 1.15)")
     args = parser.parse_args()
 
     # Preenche a arquitetura pelo preset; flags explícitas têm prioridade.
@@ -301,7 +317,9 @@ def main():
         if not os.path.exists(CKPT_PATH):
             raise SystemExit("Nenhum checkpoint encontrado. Treine primeiro.")
         model, tokenizer = load_checkpoint()
-        sample(model, tokenizer, prompt=args.generate, max_new_tokens=args.max_new)
+        sample(model, tokenizer, prompt=args.generate, max_new_tokens=args.max_new,
+               temperature=args.temperature, top_k=args.top_k, top_p=args.top_p,
+               repetition_penalty=args.repetition_penalty)
     else:
         train(args)
 
