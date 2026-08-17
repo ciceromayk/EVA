@@ -31,6 +31,7 @@ app.py                painel web (http.server) para uso local / Render / Docker
 chat.py               Sala de Conversa: interface de uso com streaming token a token
 conversar.bat         abre a Sala de Conversa no Windows (clique duplo)
 criar_atalhos.bat     cria atalhos da EVA na área de trabalho (Windows)
+localizar_python.bat  interno: acha o Python certo p/ os outros .bat usarem
 train.py              script de treino e amostragem (com presets)
 check_gpu.py          autoteste de GPU (CPU vs CuPy)
 servidor.bat          sobe a EVA com senha, pronta para acesso remoto
@@ -61,6 +62,16 @@ Depois é só clicar duas vezes:
 
 Seus materiais (`materials/`) e modelos treinados (`*.pkl`) ficam fora do
 controle de versão, então atualizar **nunca apaga o que você treinou**.
+
+### Erro "No runtime installed that matches 3.12"
+
+Os atalhos preferem o Python 3.12 (versão mais testada do projeto), mas
+não **exigem** ele: `localizar_python.bat` procura automaticamente por
+3.12 → qualquer Python 3 → `python` no PATH, nessa ordem. Se aparecer
+esse erro mesmo assim, é sinal de que **nenhum Python** foi encontrado na
+sua máquina — instale em <https://www.python.org/downloads/> marcando a
+opção **"Add python.exe to PATH"** durante a instalação, e rode o atalho
+de novo.
 
 ## Painel web (a forma mais fácil)
 
